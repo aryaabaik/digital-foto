@@ -196,6 +196,7 @@ body {
     transform-origin: center center;
     cursor: grab;
     z-index: 10;
+    touch-action: none; /* Crucial for smooth mobile drag */
 }
 .knob:active {
     cursor: grabbing;

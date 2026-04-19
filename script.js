@@ -80,26 +80,32 @@ document.addEventListener("DOMContentLoaded", () => {
     // Initialize
     updateUI();
     
+    let knobCenterX = 0;
+    let knobCenterY = 0;
+    let rafId = null;
+    
     // Drag handling using atan2 for true circular turning like a real knob
     knob.addEventListener("pointerdown", (e) => {
         isDragging = true;
-        const rect = knob.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
         
-        previousMouseAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
+        // ONLY compute center on touch start to entirely prevent mobile layout thrashing
+        const rect = knob.getBoundingClientRect();
+        knobCenterX = rect.left + rect.width / 2;
+        knobCenterY = rect.top + rect.height / 2;
+        
+        previousMouseAngle = Math.atan2(e.clientY - knobCenterY, e.clientX - knobCenterX) * (180 / Math.PI);
         knob.style.cursor = "grabbing";
+        
+        // Keep focus locked to cursor/touch even if moving off knob
+        knob.setPointerCapture(e.pointerId);
         e.preventDefault(); 
     });
     
     window.addEventListener("pointermove", (e) => {
         if (!isDragging) return;
         
-        const rect = knob.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        
-        const currentMouseAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
+        // Avoid computing BoundingClientRect here
+        const currentMouseAngle = Math.atan2(e.clientY - knobCenterY, e.clientX - knobCenterX) * (180 / Math.PI);
         let delta = currentMouseAngle - previousMouseAngle;
         
         // Handle angle wrap-around correctly
@@ -109,7 +115,9 @@ document.addEventListener("DOMContentLoaded", () => {
         totalAngle += delta; // Accumulate angle
         previousMouseAngle = currentMouseAngle;
         
-        updateUI();
+        // requestAnimationFrame yields butter smooth UI updates on mobile phones
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(updateUI);
     });
     
     window.addEventListener("pointerup", () => {
