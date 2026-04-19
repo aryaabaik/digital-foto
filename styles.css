@@ -1,0 +1,223 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: #2b2524;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+    font-family: 'Courier Prime', monospace;
+    font-size: 14px;
+    gap: 30px;
+}
+
+.page-title {
+    color: #ffffff;
+    font-family: 'Dancing Script', cursive;
+    font-weight: 700;
+    font-size: 50px; 
+    letter-spacing: normal; 
+    text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    text-align: center;
+}
+
+.device {
+    width: 380px;
+    height: 550px;
+    background: linear-gradient(145deg, #443c37, #37302b);
+    border-radius: 35px;
+    position: relative;
+    box-shadow: 
+        10px 15px 30px rgba(0,0,0,0.6),
+        inset 2px 2px 5px rgba(255,255,255,0.1),
+        inset -2px -2px 5px rgba(0,0,0,0.3);
+    border: 1px solid #2a2522;
+    padding: 40px 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Screws */
+.screw {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    background: linear-gradient(135deg, #26221f, #3b3531);
+    border-radius: 50%;
+    box-shadow: 
+        inset 1px 1px 2px rgba(0,0,0,0.8),
+        1px 1px 1px rgba(255,255,255,0.1);
+}
+.screw::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 20%;
+    right: 20%;
+    height: 2px;
+    background-color: #1a1715;
+    transform: translateY(-50%) rotate(45deg);
+    box-shadow: 0px 1px 0px rgba(255,255,255,0.1);
+}
+
+.top-left { top: 20px; left: 20px; }
+.top-right { top: 20px; right: 20px; }
+.bottom-left { bottom: 20px; left: 20px; }
+.bottom-right { bottom: 20px; right: 20px; }
+.top-right::after { transform: translateY(-50%) rotate(-15deg); }
+.bottom-left::after { transform: translateY(-50%) rotate(70deg); }
+.bottom-right::after { transform: translateY(-50%) rotate(-45deg); }
+/* Title */
+.device-title {
+    color: #63574c;
+    font-size: 16px;
+    letter-spacing: 3px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-shadow: 
+        1px 1px 1px rgba(255,255,255,0.05),
+        -1px -1px 1px rgba(0,0,0,0.8);
+}
+
+/* Screen */
+.screen-bezel {
+    width: 100%;
+    height: 220px;
+    background-color: #110e0c;
+    border-radius: 15px;
+    padding: 10px;
+    box-shadow: 
+        inset 0 10px 20px rgba(0,0,0,0.8),
+        inset 0 0px 5px rgba(0,0,0,0.5),
+        0 2px 2px rgba(255,255,255,0.05);
+    margin-bottom: 30px;
+}
+
+.screen-glass {
+    width: 100%;
+    height: 100%;
+    background-color: #000;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.6);
+}
+
+.photo-track {
+    display: flex;
+    height: 100%;
+    align-items: center;
+    gap: 10px;
+    padding: 0 45px; /* So the first photo is centered */
+}
+
+.photo {
+    width: 210px;
+    height: 180px;
+    flex-shrink: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    background-color: #222;
+}
+
+.photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Dots */
+.dots-container {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 25px;
+}
+
+.dot {
+    width: 8px;
+    height: 8px;
+    background-color: #312b27;
+    border-radius: 50%;
+    box-shadow: inset 1px 1px 2px rgba(0,0,0,0.5);
+}
+
+.dot.active {
+    background-color: #928373;
+    box-shadow: 0 0 5px rgba(175, 155, 133, 0.4);
+}
+
+/* Timers */
+.timers {
+    display: flex;
+    gap: 40px;
+    color: #63574c;
+    margin-bottom: 60px;
+}
+
+#currentTime {
+    color: #948575;
+}
+
+/* Knob */
+.knob-container {
+    position: relative;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.knob-base {
+    width: 30px;
+    height: 30px;
+    background-color: #0b0908;
+    border-radius: 50%;
+    box-shadow: inset 0 3px 5px rgba(0,0,0,0.8);
+    position: absolute;
+}
+
+.knob {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    /* Rotation center is the hole center */
+    transform-origin: center center;
+    cursor: grab;
+    z-index: 10;
+}
+.knob:active {
+    cursor: grabbing;
+}
+
+.knob-stick {
+    position: absolute;
+    bottom: 25px; /* Start from hole center */
+    width: 6px;
+    height: 40px;
+    background: linear-gradient(90deg, #d2c8ae, #f5ebd3, #b8ab8e);
+    border-radius: 3px;
+    transform-origin: bottom center;
+    box-shadow: 0 5px 10px rgba(0,0,0,0.5);
+}
+
+.knob-head {
+    position: absolute;
+    bottom: 65px; /* Stick height + offset */
+    width: 14px;
+    height: 20px;
+    background: radial-gradient(circle at 30% 30%, #ffffff, #fdf4e9, #dcd0ba);
+    border-radius: 7px 7px 10px 10px;
+    box-shadow: 0 5px 10px rgba(0,0,0,0.6);
+}
