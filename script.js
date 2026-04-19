@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
     const knob = document.getElementById("knob");
+    const knobContainer = document.querySelector(".knob-container");
     const photoTrack = document.getElementById("photoTrack");
     const dotsContainer = document.getElementById("dotsContainer");
     const currentTimeEl = document.getElementById("currentTime");
@@ -20,19 +21,21 @@ document.addEventListener("DOMContentLoaded", () => {
     const dots = document.querySelectorAll(".dot");
     
     // Infinite loop trick: clone the items a few times to allow seamless track moving
-    // We want 3 sets: prepended, original, appended
     const trackContent = photoTrack.innerHTML;
     photoTrack.innerHTML = trackContent + trackContent + trackContent;
     
     const maxPhotoWidth = 220; // 210px width + 10px gap
+    const centerOffset = numPhotos * maxPhotoWidth; // Start at the middle set
     
-    // The center group starts at numPhotos * maxPhotoWidth
-    const centerOffset = numPhotos * maxPhotoWidth;
-    
-    // Knob rotation state
+    // Rotation State
     let totalAngle = 0; // Unbounded total angle in degrees
     let isDragging = false;
     let previousMouseAngle = 0;
+    
+    // Center point for rotation math (Unchangeable by knob rotation)
+    let cx = 0;
+    let cy = 0;
+    let rafId = null;
     
     // Turning sensitivity: 60 degrees of rotation shifts 1 photo
     const anglePerPhoto = 60; 
@@ -59,7 +62,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (normalizedOffset < 0) normalizedOffset += numPhotos;
         
         // Translate track: Start at centerOffset, then add the normalized offset
-        // This ensures what you see is the center clone group scrolling seamlessly.
         const currentTranslate = centerOffset + (normalizedOffset * maxPhotoWidth);
         photoTrack.style.transform = `translateX(-${currentTranslate}px)`;
         
@@ -80,49 +82,76 @@ document.addEventListener("DOMContentLoaded", () => {
     // Initialize
     updateUI();
     
-    let previousX = 0;
-    let rafId = null;
-    
-    // Drag handling using horizontal swipe mapping (much better for mobile than tiny circles)
-    knob.addEventListener("pointerdown", (e) => {
+    // Function to calculate exact angle given clientX and clientY
+    function getAngle(x, y) {
+        return Math.atan2(y - cy, x - cx) * (180 / Math.PI);
+    }
+
+    // Handles the start of a drag
+    function startDrag(clientX, clientY) {
         isDragging = true;
         
-        previousX = e.clientX;
-        knob.style.cursor = "grabbing";
+        // Calculate stable center using the container (which doesn't rotate!)
+        const rect = knobContainer.getBoundingClientRect();
+        cx = rect.left + rect.width / 2;
+        cy = rect.top + rect.height / 2;
         
-        // Keep focus locked to cursor/touch even if moving off knob
-        knob.setPointerCapture(e.pointerId);
-        e.preventDefault(); 
-    });
-    
-    window.addEventListener("pointermove", (e) => {
+        previousMouseAngle = getAngle(clientX, clientY);
+        knob.style.cursor = "grabbing";
+    }
+
+    // Handles the moving action
+    function moveDrag(clientX, clientY) {
         if (!isDragging) return;
         
-        // Map horizontal drag distance to rotation angle directly
-        let dx = e.clientX - previousX;
+        const currentMouseAngle = getAngle(clientX, clientY);
+        let delta = currentMouseAngle - previousMouseAngle;
         
-        // Sensitivity: 1px swipe = 1.5 degrees rotation. 
-        // This is incredibly smooth and easy on mobile without "dikit dikit" feel
-        let delta = dx * 1.5;
+        // Handle angle wrap-around (-180 to 180 boundary)
+        if (delta > 180) delta -= 360;
+        if (delta < -180) delta += 360;
         
-        totalAngle += delta; // Accumulate angle
-        previousX = e.clientX; // Update previousX
+        totalAngle += delta;
+        previousMouseAngle = currentMouseAngle;
         
-        // requestAnimationFrame yields butter smooth UI updates on mobile phones
         if (rafId) cancelAnimationFrame(rafId);
         rafId = requestAnimationFrame(updateUI);
-    });
-    
-    window.addEventListener("pointerup", () => {
-        if (isDragging) {
-            isDragging = false;
-            knob.style.cursor = "grab";
-        }
-    });
+    }
 
-    // Handle touch end globally in case pointer goes outside window
-    window.addEventListener("pointercancel", () => {
+    // Handles stopping the drag
+    function endDrag() {
         isDragging = false;
         knob.style.cursor = "grab";
+    }
+
+    // ============================================
+    // EXPERT MOBILE BROWSER & DESKTOP EVENT WIRING
+    // ============================================
+
+    // 1. Mouse Events (Desktop)
+    knob.addEventListener("mousedown", (e) => {
+        e.preventDefault(); // Stop text selection
+        startDrag(e.clientX, e.clientY);
     });
+    window.addEventListener("mousemove", (e) => moveDrag(e.clientX, e.clientY) );
+    window.addEventListener("mouseup", endDrag);
+
+    // 2. Touch Events (Mobile)
+    knob.addEventListener("touchstart", (e) => {
+        // e.preventDefault() here stops iOS bouncing
+        if (e.cancelable) e.preventDefault(); 
+        const touch = e.touches[0];
+        startDrag(touch.clientX, touch.clientY);
+    }, { passive: false });
+    
+    window.addEventListener("touchmove", (e) => {
+        if (!isDragging) return;
+        // e.preventDefault() stops the whole page from scrolling while turning the knob
+        if (e.cancelable) e.preventDefault(); 
+        const touch = e.touches[0];
+        moveDrag(touch.clientX, touch.clientY);
+    }, { passive: false });
+    
+    window.addEventListener("touchend", endDrag);
+    window.addEventListener("touchcancel", endDrag);
 });
