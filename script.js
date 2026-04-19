@@ -80,20 +80,14 @@ document.addEventListener("DOMContentLoaded", () => {
     // Initialize
     updateUI();
     
-    let knobCenterX = 0;
-    let knobCenterY = 0;
+    let previousX = 0;
     let rafId = null;
     
-    // Drag handling using atan2 for true circular turning like a real knob
+    // Drag handling using horizontal swipe mapping (much better for mobile than tiny circles)
     knob.addEventListener("pointerdown", (e) => {
         isDragging = true;
         
-        // ONLY compute center on touch start to entirely prevent mobile layout thrashing
-        const rect = knob.getBoundingClientRect();
-        knobCenterX = rect.left + rect.width / 2;
-        knobCenterY = rect.top + rect.height / 2;
-        
-        previousMouseAngle = Math.atan2(e.clientY - knobCenterY, e.clientX - knobCenterX) * (180 / Math.PI);
+        previousX = e.clientX;
         knob.style.cursor = "grabbing";
         
         // Keep focus locked to cursor/touch even if moving off knob
@@ -104,16 +98,15 @@ document.addEventListener("DOMContentLoaded", () => {
     window.addEventListener("pointermove", (e) => {
         if (!isDragging) return;
         
-        // Avoid computing BoundingClientRect here
-        const currentMouseAngle = Math.atan2(e.clientY - knobCenterY, e.clientX - knobCenterX) * (180 / Math.PI);
-        let delta = currentMouseAngle - previousMouseAngle;
+        // Map horizontal drag distance to rotation angle directly
+        let dx = e.clientX - previousX;
         
-        // Handle angle wrap-around correctly
-        if (delta > 180) delta -= 360;
-        if (delta < -180) delta += 360;
+        // Sensitivity: 1px swipe = 1.5 degrees rotation. 
+        // This is incredibly smooth and easy on mobile without "dikit dikit" feel
+        let delta = dx * 1.5;
         
         totalAngle += delta; // Accumulate angle
-        previousMouseAngle = currentMouseAngle;
+        previousX = e.clientX; // Update previousX
         
         // requestAnimationFrame yields butter smooth UI updates on mobile phones
         if (rafId) cancelAnimationFrame(rafId);
