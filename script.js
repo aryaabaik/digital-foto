@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const photoTrack = document.getElementById("photoTrack");
     const dotsContainer = document.getElementById("dotsContainer");
     const currentTimeEl = document.getElementById("currentTime");
+    const progressFill  = document.getElementById("progressFill");
     
     // We have 5 original photos
     const originalPhotos = document.querySelectorAll(".photo");
@@ -36,6 +37,33 @@ document.addEventListener("DOMContentLoaded", () => {
     let cx = 0;
     let cy = 0;
     let rafId = null;
+
+    // Sound feedback state
+    let prevActiveIndex = -1;
+    let audioCtx = null;
+
+    function getAudioCtx() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        return audioCtx;
+    }
+
+    // Soft mechanical "tick" synthesized via Web Audio
+    function playClick() {
+        try {
+            const ctx = getAudioCtx();
+            const osc  = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(1100, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(500, ctx.currentTime + 0.05);
+            gain.gain.setValueAtTime(0.08, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.06);
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.07);
+        } catch (_) {}
+    }
     
     // Turning sensitivity: 60 degrees of rotation shifts 1 photo
     const anglePerPhoto = 60; 
@@ -67,6 +95,11 @@ document.addEventListener("DOMContentLoaded", () => {
         
         // Update dots
         const activeIndex = Math.round(normalizedOffset) % numPhotos;
+
+        // Sound feedback on photo change
+        if (prevActiveIndex !== -1 && activeIndex !== prevActiveIndex) playClick();
+        prevActiveIndex = activeIndex;
+
         dots.forEach((dot, index) => {
             if (index === activeIndex) {
                 dot.classList.add("active");
@@ -77,6 +110,12 @@ document.addEventListener("DOMContentLoaded", () => {
         
         // Update timer
         currentTimeEl.textContent = formatTime(activeIndex);
+
+        // Update progress bar (smooth ease via CSS transition)
+        if (progressFill) {
+            const pct = (activeIndex / (numPhotos - 1)) * 100;
+            progressFill.style.width = `${pct.toFixed(1)}%`;
+        }
     }
     
     // Initialize
@@ -154,4 +193,43 @@ document.addEventListener("DOMContentLoaded", () => {
     
     window.addEventListener("touchend", endDrag);
     window.addEventListener("touchcancel", endDrag);
+
+    // ============================================
+    // AUTO SLIDESHOW (pause on hover)
+    // ============================================
+    const screenGlass = document.querySelector('.screen-glass');
+    const AUTO_DELAY  = 4000; // ms between auto-advances
+    let   autoTimer   = null;
+
+    function advanceAuto() {
+        totalAngle += anglePerPhoto;
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(updateUI);
+    }
+
+    function startAuto() {
+        if (autoTimer) return;
+        autoTimer = setInterval(advanceAuto, AUTO_DELAY);
+    }
+
+    function stopAuto() {
+        clearInterval(autoTimer);
+        autoTimer = null;
+    }
+
+    // Pause auto when user hovers the screen
+    screenGlass.addEventListener('mouseenter', () => {
+        stopAuto();
+        screenGlass.classList.add('paused');
+    });
+    screenGlass.addEventListener('mouseleave', () => {
+        screenGlass.classList.remove('paused');
+        startAuto();
+    });
+    // Also pause while dragging knob
+    knob.addEventListener('mousedown',  stopAuto);
+    window.addEventListener('mouseup',  () => { if (!isDragging) startAuto(); });
+
+    // Kick off auto on load
+    startAuto();
 });
