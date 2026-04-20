@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Momen Indah - Digital Foto Arcika</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime&family=Dancing+Script:wght@700&family=Playfair+Display:ital@1&display=swap" rel="stylesheet">
+    <style>
+        .back-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #928373;
+            text-decoration: none;
+            font-size: 14px;
+            letter-spacing: 1px;
+            transition: color 0.3s;
+            z-index: 100;
+        }
+
+        .back-link:hover {
+            color: #ffffff;
+        }
+
+        .photo-track {
+            transition: transform 1.2s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        /* Hilangkan knob untuk slideshow */
+        .knob-container {
+            display: none !important;
+        }
+
+        /* Area kata-kata / caption */
+        .caption-container {
+            width: 100%;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 0 20px;
+            margin-top: 10px;
+        }
+
+        .caption-text {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            color: #dcd0ba;
+            font-size: 17px;
+            line-height: 1.4;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.8s ease;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+        }
+
+        .caption-text.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Sesuaikan margin agar caption fit dengan baik */
+        .timers {
+            margin-bottom: 20px !important;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">← Kembali</a>
+    <h1 class="page-title">Digital Foto Arcika</h1>
+
+    <div class="device">
+        <!-- Screws -->
+        <div class="screw top-left"></div>
+        <div class="screw top-right"></div>
+        <div class="screw bottom-left"></div>
+        <div class="screw bottom-right"></div>
+
+        <!-- Title -->
+        <div class="device-title">MOMEN INDAH</div>
+
+        <!-- Photo Viewer -->
+        <div class="screen-bezel">
+            <div class="screen-glass">
+                <div class="photo-track" id="autoPhotoTrack">
+                    <!-- Photos will be inserted via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Dots -->
+        <div class="dots-container" id="autoDotsContainer"></div>
+
+        <!-- Timers -->
+        <div class="timers">
+            <span id="autoCurrentTime">0:00</span>
+            <span id="autoTotalTime">1:13</span>
+        </div>
+
+        <!-- Captions -->
+        <div class="caption-container">
+            <div class="caption-text" id="captionText"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const photosData = [
+                { src: 'image/1.jpeg', text: 'Setiap detik bersamamu adalah anugerah.' },
+                { src: 'image/2.jpeg', text: 'Kenangan yang terukir menjadi sejarah terindah.' },
+                { src: 'image/3.jpeg', text: 'Di setiap bahagiamu, bahagiaku bermuara.' },
+                { src: 'image/4.jpeg', text: 'Waktu terus melangkah, rasa ini tetap utuh.' },
+                { src: 'image/5.jpeg', text: 'Perjalanan panjang yang kita tapaki bersama.' },
+                { src: 'image/6.jpeg', text: 'Senyum yang selalu menjadi rumah tempat pulang.' },
+                { src: 'image/7.jpeg', text: 'Hadirmu adalah warna dalam setiap hariku.' },
+                { src: 'image/8.jpeg', text: 'Dalam diam, doaku tak putus menyertaimu.' },
+                { src: 'image/9.jpeg', text: 'Ikatan yang semakin menguat ditelan masa.' },
+                { src: 'image/10.jpeg', text: 'Berjalan beriringan dalam setiap cerita.' },
+                { src: 'image/11.jpeg', text: 'Terima kasih telah menemani suka dan duka.' },
+                { src: 'image/12.jpeg', text: 'Setiap sudut kota merekam tawa kita.' },
+                { src: 'image/13.jpeg', text: 'Satu bingkai, sejuta arti tak terucap.' },
+                { src: 'image/14.jpeg', text: 'Tumbuh bersama, kuat bersama, selamanya.' }
+            ];
+
+            const photoTrack = document.getElementById("autoPhotoTrack");
+            const dotsContainer = document.getElementById("autoDotsContainer");
+            const captionText = document.getElementById("captionText");
+            const currentTimeEl = document.getElementById("autoCurrentTime");
+
+            const numPhotos = photosData.length;
+            const maxPhotoWidth = 220; // 210px width + 10px gap
+            const totalSeconds = 73;
+
+            // Generate Photos Structure (We just duplicate it three times for seamless effect in future or just simple loops)
+            let trackHTML = '';
+            photosData.forEach((photo, i) => {
+                trackHTML += `<div class="photo photo-${i+1}"><img src="${photo.src}" alt="Photo ${i+1}"></div>`;
+            });
+            // We append three sets so it looks infinitely populated like the player
+            photoTrack.innerHTML = trackHTML + trackHTML + trackHTML;
+
+            // Start in the middle set to avoid edge cases initially
+            const centerOffset = numPhotos * maxPhotoWidth; 
+
+            // Generate Dots
+            for (let i = 0; i < numPhotos; i++) {
+                const dot = document.createElement("div");
+                dot.classList.add("dot");
+                if (i === 0) dot.classList.add("active");
+                dotsContainer.appendChild(dot);
+            }
+            const dots = document.querySelectorAll("#autoDotsContainer .dot");
+
+            let currentIndex = 0;
+
+            function formatTime(index) {
+                const progress = index / (numPhotos - 1 || 1);
+                const currentSecs = Math.max(0, Math.min(totalSeconds, progress * totalSeconds));
+                const m = Math.floor(currentSecs / 60);
+                const s = Math.floor(currentSecs % 60);
+                return `${m}:${s < 10 ? '0' : ''}${s}`;
+            }
+
+            function updateSlide(index, animate = true) {
+                // If snap smoothly without animation is needed
+                if (!animate) {
+                    photoTrack.style.transition = 'none';
+                } else {
+                    photoTrack.style.transition = 'transform 1.2s cubic-bezier(0.25, 1, 0.5, 1)';
+                }
+
+                // Translate track
+                const currentTranslate = centerOffset + (index * maxPhotoWidth);
+                photoTrack.style.transform = `translateX(-${currentTranslate}px)`;
+
+                // Allow flush of CSS
+                if (!animate) {
+                    photoTrack.offsetHeight; 
+                }
+
+                // Dots mapping
+                const relativeIndex = index % numPhotos;
+                dots.forEach((dot, i) => {
+                    dot.classList.toggle("active", i === relativeIndex);
+                });
+
+                // Timers mapping
+                currentTimeEl.textContent = formatTime(relativeIndex);
+
+                // Words update
+                captionText.classList.remove("visible");
+                if (animate) {
+                    setTimeout(() => {
+                        captionText.textContent = photosData[relativeIndex].text;
+                        captionText.classList.add("visible");
+                    }, 400); // Tunggu foto geser lalu fade teks-nya
+                } else {
+                    captionText.textContent = photosData[relativeIndex].text;
+                    captionText.classList.add("visible");
+                }
+            }
+
+            // Init
+            updateSlide(currentIndex, false);
+
+            setInterval(() => {
+                currentIndex++;
+                
+                // Kalau sudah mentok sampai foto terakhir dari set tengah
+                if (currentIndex >= numPhotos) {
+                    // Cukup reset index, karena transisi sangat jauh ke belakang mungkin kurang aesthetic,
+                    // Tapi sebagai visualizer klasik "rewind", efek gulung mundur itu keren juga.
+                    // Jika mau rewind keren:
+                    updateSlide(0, true);
+                    currentIndex = 0;
+                } else {
+                    updateSlide(currentIndex, true);
+                }
+            }, 4500); // Ganti tiap 4.5 detik
+        });
+    </script>
+</body>
+</html>

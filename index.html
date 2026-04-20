@@ -3,95 +3,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digital Foto Player</title>
+    <title>Pilih Mode - Digital Foto Arcika</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Courier+Prime&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            gap: 20px;
+        }
+        
+        .main-header {
+            margin-bottom: 10px;
+        }
+
+        .choices-wrapper {
+            display: flex;
+            gap: 50px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap; /* untuk layar kecil */
+        }
+
+        .choice-link {
+            text-decoration: none;
+            color: inherit;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: block;
+        }
+
+        .choice-link:hover {
+            transform: translateY(-10px) scale(1.02);
+        }
+
+        /* Penyesuaian box untuk menu pilihan */
+        .choice-link .device {
+            height: 460px; 
+            width: 320px;
+            padding: 30px 20px;
+            pointer-events: none; /* Cegah interaksi langsung di dalam menu */
+            position: relative;
+        }
+
+        .choice-link .device::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(rgba(255,255,255,0.05), transparent);
+            border-radius: 35px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .choice-link:hover .device::after {
+            opacity: 1;
+        }
+
+        .choice-link .screen-bezel {
+            height: 160px; /* Lebar lebih kecil di menu */
+            margin-bottom: 25px;
+        }
+
+        .choice-link .photo-track {
+            padding: 0 45px;
+        }
+
+        .choice-link .photo {
+            width: 170px;
+            height: 140px;
+        }
+
+        .menu-title {
+            text-align: center;
+            color: #dcd0ba;
+            font-size: 20px;
+            margin-top: 15px;
+            letter-spacing: 2px;
+            font-weight: bold;
+            font-family: 'Courier Prime', monospace;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .menu-desc {
+            text-align: center;
+            color: #928373;
+            font-size: 13px;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        /* Hilangkan knob visual yang interaktif, gantikan dengan ornamen simpel */
+        .preview-knob-container {
+            position: relative;
+            width: 40px;
+            height: 40px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        @media (max-width: 768px) {
+            .choices-wrapper {
+                flex-direction: column;
+                gap: 30px;
+                transform: scale(0.9);
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1 class="page-title">Digital Foto Arcika</h1>
-
-    <div class="device">
-        <!-- Screws -->
-        <div class="screw top-left"></div>
-        <div class="screw top-right"></div>
-        <div class="screw bottom-left"></div>
-        <div class="screw bottom-right"></div>
-
-        <!-- Title -->
-        <div class="device-title">ROLATE-FOTO</div>
-
-        <!-- Photo Viewer -->
-        <div class="screen-bezel">
-            <div class="screen-glass">
-                <div class="photo-track" id="photoTrack">
-                    <!-- Photos will be inserted via CSS/JS or hardcoded here -->
-                    <div class="photo photo-1">
-                        <img src="image/1.jpeg" alt="Photo 1">
-                    </div>
-                    <div class="photo photo-2">
-                        <img src="image/2.jpeg" alt="Photo 2">
-                    </div>
-                    <div class="photo photo-3">
-                        <img src="image/3.jpeg" alt="Photo 3">
-                    </div>
-                    <div class="photo photo-4">
-                        <img src="image/4.jpeg" alt="Photo 4">
-                    </div>
-                    <div class="photo photo-5">
-                       <img src="image/5.jpeg" alt="Photo 5">
-                    </div>
-                    <div class="photo photo-6">
-                        <img src="image/6.jpeg" alt="Photo 6">
-                    </div>
-                    <div class="photo photo-7">
-                        <img src="image/7.jpeg" alt="Photo 7">
-                    </div>
-                    <div class="photo photo-8">
-                        <img src="image/8.jpeg" alt="Photo 8">
-                    </div>
-                    <div class="photo photo-9">
-                        <img src="image/9.jpeg" alt="Photo 9">
-                    </div>
-                    <div class="photo photo-10">
-                        <img src="image/10.jpeg" alt="Photo 10">
-                    </div>
-                    <div class="photo photo-11">
-                        <img src="image/11.jpeg" alt="Photo 11">
-                    </div>
-                    <div class="photo photo-12">
-                        <img src="image/12.jpeg" alt="Photo 12">
-                    </div>
-                    <div class="photo photo-13">
-                        <img src="image/13.jpeg" alt="Photo 13">
-                    </div>
-                    <div class="photo photo-14">
-                        <img src="image/14.jpeg" alt="Photo 14">
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Dots -->
-        <div class="dots-container" id="dotsContainer">
-            <!-- Generate dots -- JS can do it, or hardcode -->
-        </div>
-
-        <!-- Timers -->
-        <div class="timers">
-            <span id="currentTime">0:00</span>
-            <span id="totalTime">1:13</span>
-        </div>
-
-        <!-- Knob -->
-        <div class="knob-container">
-            <div class="knob-base"></div>
-            <div class="knob" id="knob">
-                <div class="knob-stick"></div>
-                <div class="knob-head"></div>
-            </div>
-        </div>
+    <div class="main-header">
+        <h1 class="page-title">Digital Foto Arcika</h1>
     </div>
 
-    <script src="script.js"></script>
+    <div class="choices-wrapper">
+        <!-- Pilihan 1: Slideshow Otomatis -->
+        <a href="slideshow.html" class="choice-link">
+            <div class="device">
+                <div class="screw top-left"></div>
+                <div class="screw top-right"></div>
+                <div class="screw bottom-left"></div>
+                <div class="screw bottom-right"></div>
+                
+                <div class="device-title">MOMEN INDAH</div>
+                
+                <div class="screen-bezel">
+                    <div class="screen-glass">
+                        <div class="photo-track" style="transform: translateX(-45px);">
+                             <div class="photo">
+                                 <img src="image/1.jpeg" alt="Preview 1">
+                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Representasi tanpa knob tapi dengan baris dekorasi teks -->
+                <div class="menu-title">SLIDESHOW</div>
+                <div class="menu-desc">Foto berjalan otomatis<br>dengan kata-kata cerita</div>
+            </div>
+        </a>
+
+        <!-- Pilihan 2: Digital Player -->
+        <a href="player.html" class="choice-link">
+            <div class="device">
+                <div class="screw top-left"></div>
+                <div class="screw top-right"></div>
+                <div class="screw bottom-left"></div>
+                <div class="screw bottom-right"></div>
+                
+                <div class="device-title">ROLATE-FOTO</div>
+                
+                <div class="screen-bezel">
+                    <div class="screen-glass">
+                        <div class="photo-track" style="transform: translateX(-45px);">
+                             <div class="photo">
+                                 <img src="image/10.jpeg" alt="Preview 10">
+                             </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="preview-knob-container">
+                    <div class="knob-base"></div>
+                    <div class="knob" style="position: absolute; width: 100%; height: 100%; display: flex; justify-content: center; align-items: flex-end; transform-origin: center; transform: rotate(45deg);">
+                        <div class="knob-stick" style="bottom: 20px; width: 5px; height: 30px;"></div>
+                        <div class="knob-head" style="bottom: 50px; width: 12px; height: 16px;"></div>
+                    </div>
+                </div>
+
+                <div class="menu-title">DIGITAL PLAYER</div>
+                <div class="menu-desc">Putar foto manual<br>dengan gaya klasik</div>
+            </div>
+        </a>
+    </div>
 </body>
 </html>
