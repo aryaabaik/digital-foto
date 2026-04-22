@@ -250,6 +250,68 @@
             background-size: auto, 130px 130px;
             mix-blend-mode: multiply;
         }
+        /* ── Floating nav bar ── */
+        .explore-nav {
+            position: fixed;
+            bottom: 22px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 0;
+            background: rgba(18,14,12,0.82);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(200,152,106,0.15);
+            border-radius: 50px;
+            padding: 10px 6px;
+            z-index: 9995;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
+            opacity: 0;
+            animation: navRise 0.8s cubic-bezier(0.22,1,0.36,1) 1.2s forwards;
+        }
+        @keyframes navRise {
+            from { opacity:0; transform: translateX(-50%) translateY(16px); }
+            to   { opacity:1; transform: translateX(-50%) translateY(0); }
+        }
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 7px 20px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-family: 'Courier Prime', monospace;
+            font-size: 11px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: rgba(220,208,186,0.55);
+            transition: color 0.25s, background 0.25s, letter-spacing 0.25s;
+            white-space: nowrap;
+        }
+        .nav-btn:hover {
+            color: #dcd0ba;
+            background: rgba(200,152,106,0.1);
+            letter-spacing: 4px;
+        }
+        .nav-btn.nav-highlight {
+            color: rgba(200,152,106,0.85);
+        }
+        .nav-btn.nav-highlight:hover {
+            color: #e0b878;
+            background: rgba(200,152,106,0.12);
+        }
+        .nav-divider {
+            width: 1px;
+            height: 18px;
+            background: rgba(200,152,106,0.2);
+            flex-shrink: 0;
+        }
+        .nav-icon { font-size: 13px; }
+        @media (max-width: 480px) {
+            .nav-btn { padding: 6px 12px; font-size: 9px; letter-spacing: 2px; gap: 5px; }
+            .nav-btn span.nav-label { display: none; }
+        }
     </style>
 </head>
 <body>
@@ -348,8 +410,23 @@
         </div>
     </div>
 
+    <!-- ── Floating Navigation ── -->
+    <nav class="explore-nav" aria-label="Navigasi halaman">
+        <a href="welcome.html" class="nav-btn">
+            <span class="nav-icon">⌂</span>
+            <span class="nav-label">Beranda</span>
+        </a>
+        <div class="nav-divider"></div>
+        <a href="index.html" class="nav-btn">
+            <span class="nav-icon">◈</span>
+            <span class="nav-label">Pilih Mode</span>
+        </a>
+        <div class="nav-divider"></div>
+        <a href="slideshow.html" class="nav-btn nav-highlight"><span class="nav-icon">??</span><span class="nav-label">Lihat Cerita</span></a><div class="nav-divider"></div><a href="gallery.html" class="nav-btn nav-highlight"><span class="nav-icon">?</span><span class="nav-label">Galeri</span></a></nav>
+
     <script src="script.js"></script>
     <script src="transitions.js"></script>
     <script src="music.js"></script>
 </body>
 </html>
+
