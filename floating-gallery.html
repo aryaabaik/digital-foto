@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Floating Gallery — Digital Foto Arcika</title>
+    <meta name="description" content="Floating Gallery — foto-foto melayang dengan efek depth dan parallax dari Digital Foto Arcika">
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <style>
+        /* ─── Reset ─── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        /* ─── Base ─── */
+        html, body {
+            width: 100%; height: 100%;
+            overflow: hidden;
+            font-family: 'Courier Prime', monospace;
+            background: #0d0b0a;
+            cursor: default;
+        }
+
+        /* ─── Film grain ─── */
+        body::after {
+            content: '';
+            position: fixed; inset: 0;
+            z-index: 9990;
+            pointer-events: none;
+            opacity: 0.045;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-size: 200px 200px;
+        }
+
+        /* ─── Deep space background ─── */
+        .bg-space {
+            position: fixed; inset: 0; z-index: 0;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(60,40,20,0.4) 0%, transparent 55%),
+                radial-gradient(ellipse at 80% 80%, rgba(40,25,15,0.35) 0%, transparent 55%),
+                radial-gradient(ellipse at 50% 50%, #1c1510 0%, #0d0b0a 100%);
+        }
+
+        /* Vignette */
+        .bg-vignette {
+            position: fixed; inset: 0; z-index: 1; pointer-events: none;
+            background: radial-gradient(ellipse at 50% 50%, transparent 30%, rgba(0,0,0,0.75) 100%);
+        }
+
+        /* ─── Petal canvas ─── */
+        #petalCanvas {
+            position: fixed; inset: 0;
+            z-index: 1; /* sits just above bg-space, below gallery */
+            pointer-events: none;
+            width: 100%; height: 100%;
+        }
+
+        /* ─── Header ─── */
+        .gallery-header {
+            position: fixed; top: 0; left: 0; right: 0;
+            z-index: 100;
+            padding: 22px 30px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(to bottom, rgba(13,11,10,0.92) 0%, transparent 100%);
+        }
+
+        .back-btn {
+            display: flex; align-items: center; gap: 8px;
+            text-decoration: none;
+            color: rgba(220,208,186,0.5);
+            font-size: 12px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            transition: color 0.3s;
+        }
+        .back-btn:hover { color: #dcd0ba; }
+        .back-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
+
+        .header-title {
+            font-family: 'Dancing Script', cursive;
+            font-size: 28px;
+            color: #dcd0ba;
+            text-shadow: 0 0 30px rgba(190,150,70,0.3);
+            letter-spacing: 1px;
+        }
+
+        .header-sub {
+            font-size: 11px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: rgba(220,208,186,0.3);
+            text-align: right;
+        }
+
+        /* ─── Gallery canvas ─── */
+        .gallery-canvas {
+            position: fixed; inset: 0; z-index: 2;
+            perspective: 1200px;
+            perspective-origin: 50% 50%;
+        }
+
+        .gallery-world {
+            position: absolute; inset: 0;
+            transform-style: preserve-3d;
+            transition: transform 0.08s linear;
+        }
+
+        /* ─── Each floating photo ─── */
+        .float-photo {
+            position: absolute;
+            cursor: zoom-in;
+            transform-style: preserve-3d;
+            will-change: transform;
+            transition: transform 0.4s cubic-bezier(0.175,0.885,0.32,1.275),
+                        filter 0.35s ease,
+                        box-shadow 0.35s ease;
+        }
+
+        .float-photo img {
+            display: block;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        /* Polaroid-style frame */
+        .float-photo .frame {
+            position: relative;
+            width: 100%; height: 100%;
+            background: #f0e8d8;
+            padding: 8px 8px 32px 8px;
+            border-radius: 3px;
+            box-shadow:
+                0 6px 20px rgba(0,0,0,0.6),
+                0 2px 6px rgba(0,0,0,0.4),
+                inset 0 1px 0 rgba(255,255,255,0.15);
+            overflow: hidden;
+        }
+
+        .float-photo .frame .img-wrap {
+            width: 100%;
+            height: calc(100% - 24px);
+            overflow: hidden;
+            border-radius: 2px;
+        }
+
+        .float-photo .frame img {
+            border-radius: 2px;
+            transition: transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94);
+        }
+
+        .float-photo:hover .frame img {
+            transform: scale(1.08);
+        }
+
+        /* Caption strip on polaroid */
+        .float-photo .caption {
+            position: absolute;
+            bottom: 6px; left: 0; right: 0;
+            text-align: center;
+            font-family: 'Courier Prime', monospace;
+            font-size: 10px;
+            color: rgba(80,60,40,0.7);
+            letter-spacing: 1px;
+            pointer-events: none;
+        }
+
+        /* Hover glow */
+        .float-photo:hover .frame {
+            box-shadow:
+                0 20px 55px rgba(0,0,0,0.8),
+                0 0 30px rgba(190,150,70,0.18),
+                inset 0 1px 0 rgba(255,255,255,0.2);
+        }
+
+        /* Hover brightness */
+        .float-photo {
+            filter: brightness(0.82) saturate(0.9);
+        }
+        .float-photo:hover {
+            filter: brightness(1.05) saturate(1.1);
+        }
+
+        /* ─── Floating animations (8 variants) ─── */
+        @keyframes float1 {
+            0%,100% { transform: translateY(0px) rotate(var(--r)); }
+            50%      { transform: translateY(-18px) rotate(var(--r)); }
+        }
+        @keyframes float2 {
+            0%,100% { transform: translateY(0px) rotate(var(--r)); }
+            50%      { transform: translateY(-12px) rotate(var(--r)); }
+        }
+        @keyframes float3 {
+            0%,100% { transform: translateY(0px) rotate(var(--r)); }
+            33%      { transform: translateY(-22px) rotate(var(--r)); }
+            66%      { transform: translateY(-8px) rotate(var(--r)); }
+        }
+        @keyframes float4 {
+            0%,100% { transform: translateY(0px) rotate(var(--r)); }
+            50%      { transform: translateY(-14px) rotate(var(--r)); }
+        }
+        @keyframes float5 {
+            0%,100% { transform: translateY(0px) rotate(var(--r)); }
+            40%      { transform: translateY(-20px) rotate(var(--r)); }
+            80%      { transform: translateY(-6px) rotate(var(--r)); }
+        }
+        @keyframes float6 {
+            0%,100% { transform: translateY(0px) rotate(var(--r)); }
+            50%      { transform: translateY(-10px) rotate(var(--r)); }
+        }
+        @keyframes float7 {
+            0%,100% { transform: translateY(0px) rotate(var(--r)); }
+            50%      { transform: translateY(-16px) rotate(var(--r)); }
+        }
+        @keyframes float8 {
+            0%,100% { transform: translateY(0px) rotate(var(--r)); }
+            30%      { transform: translateY(-25px) rotate(var(--r)); }
+            70%      { transform: translateY(-5px) rotate(var(--r)); }
+        }
+
+        /* Entrance animation */
+        @keyframes photoEntrance {
+            from { opacity: 0; transform: translateY(40px) scale(0.85) rotate(var(--r)); }
+            to   { opacity: 1; }
+        }
+
+        /* ─── Lightbox ─── */
+        .lightbox {
+            position: fixed; inset: 0; z-index: 9900;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        .lightbox.active {
+            opacity: 1; pointer-events: all;
+        }
+
+        .lb-backdrop {
+            position: absolute; inset: 0;
+            backdrop-filter: blur(22px) brightness(0.35) saturate(0.4);
+            -webkit-backdrop-filter: blur(22px) brightness(0.35) saturate(0.4);
+            background: rgba(8,6,5,0.65);
+            cursor: zoom-out;
+        }
+
+        .lb-content {
+            position: relative; z-index: 1;
+            display: flex; flex-direction: column; align-items: center;
+            transform: scale(0.88); opacity: 0;
+            transition: transform 0.4s cubic-bezier(0.175,0.885,0.32,1.275), opacity 0.4s ease;
+        }
+        .lightbox.active .lb-content {
+            transform: scale(1); opacity: 1;
+        }
+
+        .lb-img-wrap {
+            max-width: 88vw;
+            max-height: 80vh;
+            position: relative;
+        }
+
+        .lb-img-wrap img {
+            max-width: 88vw;
+            max-height: 80vh;
+            object-fit: contain;
+            border-radius: 3px;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.9), 0 0 60px rgba(190,150,70,0.08);
+            display: block;
+        }
+
+        /* Polaroid frame on lightbox */
+        .lb-frame {
+            background: #f0e8d8;
+            padding: 14px 14px 52px 14px;
+            border-radius: 3px;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.9);
+        }
+
+        .lb-caption-text {
+            margin-top: 10px;
+            font-family: 'Courier Prime', monospace;
+            font-size: 11px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: rgba(220,208,186,0.45);
+            text-align: center;
+        }
+
+        /* Nav arrows */
+        .lb-nav {
+            position: fixed; top: 50%; z-index: 2;
+            transform: translateY(-50%);
+            background: rgba(220,208,186,0.08);
+            border: 1px solid rgba(220,208,186,0.12);
+            color: rgba(220,208,186,0.6);
+            font-size: 22px;
+            width: 48px; height: 60px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.25s, color 0.25s;
+            user-select: none;
+        }
+        .lb-nav:hover { background: rgba(190,150,70,0.15); color: #dcd0ba; }
+        .lb-prev { left: 18px; }
+        .lb-next { right: 18px; }
+
+        /* Close btn */
+        .lb-close {
+            position: fixed; top: 22px; right: 26px; z-index: 3;
+            background: none; border: none;
+            color: rgba(220,208,186,0.5);
+            font-size: 28px; cursor: pointer;
+            width: 40px; height: 40px;
+            display: flex; align-items: center; justify-content: center;
+            transition: color 0.25s, transform 0.25s;
+            border-radius: 50%;
+        }
+        .lb-close:hover { color: #dcd0ba; transform: rotate(90deg); }
+
+        /* Counter */
+        .lb-counter {
+            position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+            font-size: 11px; letter-spacing: 4px; color: rgba(220,208,186,0.35);
+            z-index: 3;
+        }
+
+        /* ─── Scroll hint ─── */
+        .scroll-hint {
+            position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+            z-index: 100;
+            display: flex; flex-direction: column; align-items: center; gap: 6px;
+            opacity: 0.4;
+            animation: hintPulse 3s ease-in-out infinite;
+            pointer-events: none;
+        }
+        .scroll-hint span {
+            font-size: 9px; letter-spacing: 4px; text-transform: uppercase; color: #dcd0ba;
+        }
+        .scroll-hint svg { width: 16px; height: 16px; fill: none; stroke: #dcd0ba; stroke-width: 1.5; }
+        @keyframes hintPulse {
+            0%,100% { opacity: 0.25; }
+            50%      { opacity: 0.55; }
+        }
+
+        /* ─── Mobile adjustments ─── */
+        @media (max-width: 600px) {
+            .lb-nav { width: 36px; height: 48px; font-size: 18px; }
+            .lb-prev { left: 6px; }
+            .lb-next { right: 6px; }
+        }
+
+        /* ─── Intro overlay ─── */
+        .intro-overlay {
+            position: fixed; inset: 0; z-index: 8000;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            background: rgba(8,6,5,0.94);
+            backdrop-filter: blur(14px);
+            transition: opacity 1.6s ease;
+            cursor: pointer;
+        }
+        .intro-overlay.fade-out { opacity: 0; pointer-events: none; }
+        .intro-quote {
+            font-family: 'Dancing Script', cursive;
+            font-size: clamp(28px, 5vw, 46px);
+            color: #dcd0ba;
+            text-align: center;
+            line-height: 1.6;
+            text-shadow: 0 0 50px rgba(190,150,70,0.45);
+            animation: quoteFloat 4s ease-in-out infinite;
+            padding: 0 30px;
+        }
+        .intro-sub {
+            margin-top: 36px;
+            font-size: 10px; letter-spacing: 5px;
+            text-transform: uppercase;
+            color: rgba(220,208,186,0.3);
+            animation: hintPulse 2.5s ease-in-out infinite;
+        }
+        @keyframes quoteFloat {
+            0%,100% { transform: translateY(0); }
+            50%      { transform: translateY(-10px); }
+        }
+
+        /* ─── Chapter labels (watermark) ─── */
+        .chapter-label {
+            position: fixed; z-index: 3;
+            pointer-events: none; user-select: none;
+            font-family: 'Dancing Script', cursive;
+            color: rgba(190,145,55,0.055);
+            white-space: nowrap;
+            line-height: 1;
+        }
+
+        /* ─── Hero photo ─── */
+        .float-photo.is-hero .frame {
+            background: #f5ede0;
+            border: 1px solid rgba(190,150,60,0.35);
+            animation: heroPulse 4.5s ease-in-out infinite;
+        }
+        @keyframes heroPulse {
+            0%,100% { box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 55px rgba(190,140,50,0.25); }
+            50%      { box-shadow: 0 24px 70px rgba(0,0,0,0.85), 0 0 90px rgba(190,140,50,0.42); }
+        }
+        .float-photo.is-hero .caption {
+            font-size: 11.5px;
+            font-weight: bold;
+            color: rgba(110,75,30,0.9);
+            letter-spacing: 0.5px;
+        }
+        .float-photo.is-hero {
+            filter: brightness(1.08) saturate(1.05) !important;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Background layers -->
+    <div class="bg-space"></div>
+    <canvas id="petalCanvas"></canvas>
+    <div class="bg-vignette"></div>
+
+    <!-- Intro overlay -->
+    <div class="intro-overlay" id="introOverlay">
+        <div class="intro-quote">
+            setiap foto menyimpan cerita<br>
+            yang terlalu dalam untuk diucapkan
+        </div>
+        <div class="intro-sub">tap untuk masuk ke cerita kita</div>
+    </div>
+
+    <!-- Chapter watermark labels -->
+    <div class="chapter-label" style="font-size:110px; left:1%; top:18%; transform:rotate(-14deg);">awal mula</div>
+    <div class="chapter-label" style="font-size:100px; left:32%; top:68%; transform:rotate(-7deg);">semakin dekat</div>
+    <div class="chapter-label" style="font-size:105px; right:0%; top:28%; transform:rotate(10deg);">sekarang</div>
+
+    <!-- Header -->
+    <header class="gallery-header">
+        <a href="index.html" class="back-btn" id="backBtn">
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            KEMBALI
+        </a>
+        <div class="header-title">Floating Gallery</div>
+        <div class="header-sub">MOVE MOUSE<br>TO EXPLORE</div>
+    </header>
+
+    <!-- Gallery canvas (parallax world) -->
+    <div class="gallery-canvas" id="galleryCanvas">
+        <div class="gallery-world" id="galleryWorld">
+            <!-- Photos injected by JS -->
+        </div>
+    </div>
+
+    <!-- Scroll hint -->
+    <div class="scroll-hint">
+        <span>drag &amp; explore</span>
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><polyline points="9 13 12 16 15 13"/></svg>
+    </div>
+
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox" role="dialog" aria-modal="true">
+        <div class="lb-backdrop" id="lbBackdrop"></div>
+        <div class="lb-content" id="lbContent">
+            <div class="lb-frame">
+                <div class="lb-img-wrap">
+                    <img src="" alt="Gallery photo" id="lbImg">
+                </div>
+            </div>
+            <p class="lb-caption-text" id="lbCaption"></p>
+        </div>
+        <button class="lb-nav lb-prev" id="lbPrev" aria-label="Sebelumnya">&#8249;</button>
+        <button class="lb-nav lb-next" id="lbNext" aria-label="Berikutnya">&#8250;</button>
+        <button class="lb-close" id="lbClose" aria-label="Tutup">&#10005;</button>
+        <div class="lb-counter" id="lbCounter"></div>
+    </div>
+
+    <script src="transitions.js"></script>
+
+    <!-- ═══ Falling Petals ═══ -->
+    <script>
+    (function () {
+        const canvas = document.getElementById('petalCanvas');
+        const ctx    = canvas.getContext('2d');
+
+        /* ── Dry leaf colour palette ── */
+        const COLOURS = [
+            'rgba(160, 100,  40, 0.60)',  // deep amber
+            'rgba(190, 120,  35, 0.55)',  // golden brown
+            'rgba(140,  80,  25, 0.58)',  // dark burnt
+            'rgba(200, 145,  55, 0.50)',  // warm ochre
+            'rgba(120,  65,  20, 0.55)',  // mahogany
+            'rgba(175, 110,  40, 0.48)',  // rust
+            'rgba(215, 170,  80, 0.45)',  // dry straw
+            'rgba(100,  55,  20, 0.52)',  // espresso brown
+            'rgba(185, 130,  50, 0.42)',  // tobacco
+        ];
+
+        /* ── Draw an organic dry leaf shape ──
+           Leaf = ellipse with slightly pointed tip + midrib vein */
+        function drawLeaf(ctx, x, y, w, h, angle) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle);
+
+            // Leaf body — asymmetric bezier
+            ctx.beginPath();
+            ctx.moveTo(0, -h / 2);                          // tip top
+            ctx.bezierCurveTo(
+                 w * 0.9, -h * 0.25,                        // right bulge
+                 w * 0.85,  h * 0.35,
+                 0,         h / 2                           // tip bottom
+            );
+            ctx.bezierCurveTo(
+                -w * 0.85,  h * 0.35,
+                -w * 0.9,  -h * 0.25,
+                 0,        -h / 2
+            );
+            ctx.closePath();
+            ctx.fill();
+
+            // Midrib vein (slightly darker line)
+            ctx.beginPath();
+            ctx.moveTo(0, -h / 2);
+            ctx.lineTo(0,  h / 2);
+            ctx.strokeStyle = 'rgba(0,0,0,0.18)';
+            ctx.lineWidth   = Math.max(0.5, w * 0.06);
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        /* ── Resize ── */
+        function resize() {
+            canvas.width  = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resize();
+        window.addEventListener('resize', resize);
+
+        /* ── Leaf factory ── */
+        function makeLeaf() {
+            const w = 6  + Math.random() * 14;   // width  6–20px
+            const h = 10 + Math.random() * 20;   // height 10–30px
+            return {
+                x:       Math.random() * canvas.width,
+                y:       -30 - Math.random() * 80,
+                w, h,
+                colour:  COLOURS[Math.floor(Math.random() * COLOURS.length)],
+                speed:   0.55 + Math.random() * 1.1,       // fall speed
+                wind:    (Math.random() - 0.5) * 0.6,      // base horizontal drift
+                windFreq:0.003 + Math.random() * 0.007,    // sway oscillation rate
+                windAmp: 0.8  + Math.random() * 1.6,       // sway width
+                rot:     Math.random() * Math.PI * 2,      // starting angle
+                rotSpeed:(Math.random() - 0.5) * 0.055,   // tumble — leaves spin more
+                rotWobble: Math.random() * 0.02,           // extra wobble in rotation
+                age:     0,
+                life:    canvas.height + 80,
+            };
+        }
+
+        const LEAF_COUNT = 42;
+        const leaves = [];
+        for (let i = 0; i < LEAF_COUNT; i++) {
+            const l = makeLeaf();
+            l.y = Math.random() * canvas.height; // seed scattered on screen
+            leaves.push(l);
+        }
+
+        /* ── Animation loop ── */
+        function animateLeaves() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            leaves.forEach((l, idx) => {
+                l.age++;
+                l.y   += l.speed;
+                // sinusoidal wind sway + slow base drift
+                l.x   += l.wind + Math.sin(l.age * l.windFreq) * l.windAmp;
+                // leaf tumbles + slight wobble
+                l.rot += l.rotSpeed + Math.sin(l.age * 0.03) * l.rotWobble;
+
+                // Fade in/out edges
+                const fadeIn  = Math.min(1, l.age / 50);
+                const fadeOut = Math.min(1, (l.life - l.age) / 80);
+                ctx.globalAlpha = fadeIn * fadeOut * 0.9;
+                ctx.fillStyle   = l.colour;
+
+                drawLeaf(ctx, l.x, l.y, l.w, l.h, l.rot);
+
+                ctx.globalAlpha = 1;
+
+                // Respawn off-screen
+                if (l.y > canvas.height + 50 || l.x < -80 || l.x > canvas.width + 80) {
+                    leaves[idx] = makeLeaf();
+                }
+            });
+
+            requestAnimationFrame(animateLeaves);
+        }
+        animateLeaves();
+    })();
+    </script>
+
+    <script>
+    (function () {
+
+        /* ─── Photo data with emotional captions ─── */
+        const PHOTOS = [
+            // Chapter 1 — Awal Mula
+            { src: 'image/1.jpeg',  caption: '26.09.24' },
+            { src: 'image/2.jpeg',  caption: '26.09.24' },
+            { src: 'image/3.jpeg',  caption: '26.09.24' },
+            { src: 'image/4.jpeg',  caption: '26.09.24' },
+            { src: 'image/5.jpeg',  caption: '26.09.24' },
+            // Chapter 2 — Semakin Dekat
+            { src: 'image/6.jpeg',  caption: '26.09.24' },
+            { src: 'image/7.jpeg',  caption: '26.09.24' },
+            { src: 'image/8.jpeg',  caption: '26.09.24' },
+            { src: 'image/9.jpeg',  caption: '26.09.24' },
+            { src: 'image/10.jpeg', caption: '26.09.24' },
+            { src: 'image/11.jpeg', caption: '26.09.24' },
+            // Chapter 3 — Sekarang & Seterusnya
+            { src: 'image/12.jpeg', caption: '26.09.24' },
+            { src: 'image/13.jpeg', caption: '26.09.24' },
+            { src: 'image/14.jpeg', caption: '26.09.24' },
+            { src: 'image/15.png',  caption: '26.09.24' },
+            { src: 'image/18.png',  caption: '26.09.24' },
+        ];
+
+        const HERO_IDX = 7; // index of the hero/focal photo
+
+        /* ─── Layout — story zones ─── */
+        // [left%, top%, width(px), depth(0-3), rot(deg), floatAnim(1-8), delay(s)]
+        const LAYOUT = [
+            // ── Chapter 1: Awal Mula — LEFT zone, smaller, dimmer ──
+            [  3,  6,  185, 0, -5, 1, 0.0  ],
+            [ 17, -4,  165, 0,  4, 2, 0.20 ],
+            [  7, 40,  175, 0, -7, 3, 0.35 ],
+            [ 23, 20,  160, 0,  6, 4, 0.12 ],
+            [ 12, 64,  170, 0, -4, 5, 0.28 ],
+            // ── Chapter 2: Semakin Dekat — CENTER zone ──
+            [ 35,  5,  200, 1, -2, 6, 0.08 ],
+            [ 48, -5,  195, 1,  4, 7, 0.30 ],
+            [ 36, 26,  330, 3,  0, 1, 0.0  ], // HERO — large, centered, depth 3
+            [ 57, 15,  210, 2,  2, 2, 0.18 ],
+            [ 44, 62,  190, 1, -5, 3, 0.40 ],
+            [ 62, 44,  205, 2,  3, 4, 0.45 ],
+            // ── Chapter 3: Sekarang — RIGHT zone, warmer, larger ──
+            [ 73,  4,  200, 1, -3, 5, 0.15 ],
+            [ 83, -3,  190, 1,  5, 6, 0.30 ],
+            [ 72, 36,  220, 2, -2, 7, 0.22 ],
+            [ 84, 26,  230, 2,  4, 8, 0.50 ],
+            [ 78, 62,  210, 2, -1, 1, 0.55 ],
+        ];
+
+        const DEPTH_Z     = [0, 60, 130, 220];
+        const DEPTH_DIM   = [0.65, 0.78, 0.9, 1.0];
+        const DEPTH_SCALE = [0.78, 0.87, 0.95, 1.05];
+        const FLOAT_ANIMS = ['float1','float2','float3','float4','float5','float6','float7','float8'];
+        const FLOAT_DUR   = [5.5, 7, 6.2, 8, 5.8, 6.8, 7.4, 5.2];
+
+        const world = document.getElementById('galleryWorld');
+
+        PHOTOS.forEach((photo, i) => {
+            const cfg = LAYOUT[i] || LAYOUT[i % LAYOUT.length];
+            const [left, top, w, depth, rot, animIdx, delay] = cfg;
+            const isHero = (i === HERO_IDX);
+            const h = Math.round(w * (isHero ? 0.75 : 0.72));
+
+            const el = document.createElement('div');
+            el.className = 'float-photo' + (isHero ? ' is-hero' : '');
+            el.dataset.index = i;
+
+            const floatDur  = isHero ? 8 : FLOAT_DUR[animIdx - 1];
+            const floatAnim = isHero ? 'float1' : FLOAT_ANIMS[animIdx - 1];
+            const zIdx      = isHero ? 50 : (10 + depth * 5);
+
+            el.style.cssText = `
+                left: ${left}%;
+                top: ${top}%;
+                width: ${w}px;
+                height: ${h}px;
+                --r: ${rot}deg;
+                animation:
+                    photoEntrance 0.9s cubic-bezier(0.22,1,0.36,1) ${delay}s both,
+                    ${floatAnim} ${floatDur}s ease-in-out ${delay}s infinite;
+                filter: brightness(${isHero ? 1.08 : DEPTH_DIM[depth]}) saturate(${isHero ? 1.05 : 0.88});
+                transform: translateZ(${DEPTH_Z[depth]}px) scale(${DEPTH_SCALE[depth]}) rotate(${rot}deg);
+                z-index: ${zIdx};
+            `;
+
+            el.innerHTML = `
+                <div class="frame">
+                    <div class="img-wrap">
+                        <img src="${photo.src}" alt="${photo.caption}" loading="lazy" draggable="false">
+                    </div>
+                    <div class="caption">${photo.caption}</div>
+                </div>
+            `;
+
+            el.addEventListener('click', () => openLightbox(i));
+            world.appendChild(el);
+        });
+
+        /* ─── Parallax on mouse move ─── */
+        const canvas = document.getElementById('galleryCanvas');
+        let targetRX = 0, targetRY = 0;
+        let currentRX = 0, currentRY = 0;
+
+        canvas.addEventListener('mousemove', (e) => {
+            const cx = canvas.clientWidth  / 2;
+            const cy = canvas.clientHeight / 2;
+            targetRY =  ((e.clientX - cx) / cx) * 8;
+            targetRX = -((e.clientY - cy) / cy) * 5;
+        });
+        canvas.addEventListener('mouseleave', () => { targetRX = 0; targetRY = 0; });
+
+        function lerp(a, b, t) { return a + (b - a) * t; }
+        function tick() {
+            currentRX = lerp(currentRX, targetRX, 0.06);
+            currentRY = lerp(currentRY, targetRY, 0.06);
+            world.style.transform = `rotateX(${currentRX}deg) rotateY(${currentRY}deg)`;
+            requestAnimationFrame(tick);
+        }
+        tick();
+
+        /* ─── Touch drag pan ─── */
+        let isDragging = false, dragStart = { x: 0, y: 0 };
+        canvas.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            dragStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        }, { passive: true });
+        canvas.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            targetRY =  ((e.touches[0].clientX - dragStart.x) / canvas.clientWidth)  * 20;
+            targetRX = -((e.touches[0].clientY - dragStart.y) / canvas.clientHeight) * 12;
+        }, { passive: true });
+        canvas.addEventListener('touchend', () => { isDragging = false; targetRX = 0; targetRY = 0; });
+
+        /* ─── Lightbox ─── */
+        const lightbox  = document.getElementById('lightbox');
+        const lbImg     = document.getElementById('lbImg');
+        const lbCaption = document.getElementById('lbCaption');
+        const lbCounter = document.getElementById('lbCounter');
+        let currentIdx  = 0;
+
+        function openLightbox(idx) {
+            currentIdx = idx;
+            updateLightbox();
+            lightbox.classList.add('active');
+        }
+        function closeLightbox() { lightbox.classList.remove('active'); }
+        function updateLightbox() {
+            const photo = PHOTOS[currentIdx];
+            lbImg.src = photo.src;
+            lbImg.alt = photo.caption;
+            lbCaption.textContent = photo.caption;
+            lbCounter.textContent = `${currentIdx + 1} / ${PHOTOS.length}`;
+        }
+
+        document.getElementById('lbClose').addEventListener('click', closeLightbox);
+        document.getElementById('lbBackdrop').addEventListener('click', closeLightbox);
+        document.getElementById('lbPrev').addEventListener('click', () => {
+            currentIdx = (currentIdx - 1 + PHOTOS.length) % PHOTOS.length;
+            updateLightbox();
+        });
+        document.getElementById('lbNext').addEventListener('click', () => {
+            currentIdx = (currentIdx + 1) % PHOTOS.length;
+            updateLightbox();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (!lightbox.classList.contains('active')) return;
+            if (e.key === 'Escape')      closeLightbox();
+            if (e.key === 'ArrowLeft')  { currentIdx = (currentIdx - 1 + PHOTOS.length) % PHOTOS.length; updateLightbox(); }
+            if (e.key === 'ArrowRight') { currentIdx = (currentIdx + 1) % PHOTOS.length; updateLightbox(); }
+        });
+
+        /* ─── Intro overlay dismiss ─── */
+        const introOverlay = document.getElementById('introOverlay');
+        function dismissIntro() {
+            introOverlay.classList.add('fade-out');
+            setTimeout(() => introOverlay.style.display = 'none', 1700);
+        }
+        introOverlay.addEventListener('click', dismissIntro);
+        // Auto-dismiss after 5s
+        setTimeout(dismissIntro, 5000);
+
+        /* ─── Hide scroll hint after first mouse move ─── */
+        const hint = document.querySelector('.scroll-hint');
+        canvas.addEventListener('mousemove', () => {
+            hint.style.opacity = '0';
+            hint.style.transition = 'opacity 0.8s';
+        }, { once: true });
+
+    })();
+    </script>
+</body>
+</html>
