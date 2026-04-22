@@ -7,6 +7,33 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Courier+Prime&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
     <style>
+        /* ── Floating Gallery preview card ── */
+        .fg-preview {
+            position: absolute; inset: 0;
+            overflow: hidden;
+        }
+        .fg-pol {
+            position: absolute;
+            background: #ede4d2;
+            padding: 4px 4px 16px 4px;
+            border-radius: 2px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.7);
+            overflow: hidden;
+        }
+        .fg-pol img {
+            width: 100%; height: calc(100% - 12px);
+            object-fit: cover; display: block;
+            border-radius: 1px;
+        }
+        @keyframes fgFloat1 {
+            0%,100% { translate: 0 0; }
+            50%      { translate: 0 -9px; }
+        }
+        @keyframes fgFloat2 {
+            0%,100% { translate: 0 0; }
+            50%      { translate: 0 -6px; }
+        }
+
         /* ── 8. Film grain (konsistensi tema) ── */
         body::after {
             content: '';
@@ -205,7 +232,7 @@
     <a href="welcome.html" class="back-link" style="z-index:9999;">← Welcome</a>
     <div class="main-header">
         <h1 class="page-title">Digital Foto Arcika</h1>
-        <p class="index-subtitle">choose your story</p>
+        <p class="index-subtitle">photo for you</p>
     </div>
 
     <div class="choices-wrapper">
@@ -217,7 +244,7 @@
                 <div class="screw bottom-left"></div>
                 <div class="screw bottom-right"></div>
                 
-                <div class="device-title">MOMEN INDAH</div>
+                <div class="device-title">For You</div>
                 
                 <div class="screen-bezel">
                     <div class="screen-glass">
@@ -231,7 +258,7 @@
 
                 <!-- Representasi tanpa knob tapi dengan baris dekorasi teks -->
                 <div class="menu-title">SLIDESHOW</div>
-                <div class="menu-desc">Foto berjalan otomatis<br>dengan kata-kata cerita</div>
+                <div class="menu-desc">Foto berjalan otomatis</div>
             </div>
         </a>
 
@@ -243,7 +270,7 @@
                 <div class="screw bottom-left"></div>
                 <div class="screw bottom-right"></div>
                 
-                <div class="device-title">ROLATE-FOTO</div>
+                <div class="device-title">ROTATE-FOTO</div>
                 
                 <div class="screen-bezel">
                     <div class="screen-glass">
@@ -263,8 +290,36 @@
                     </div>
                 </div>
 
-                <div class="menu-title">DIGITAL PLAYER</div>
-                <div class="menu-desc">Putar foto manual<br>dengan gaya klasik</div>
+                <div class="menu-title">DIGITAL FOTO</div>
+                <div class="menu-desc">Putar foto manual</div>
+            </div>
+        </a>
+
+        <!-- Pilihan 3: Floating Gallery -->
+        <a href="floating-gallery.html" class="choice-link" id="floatingGalleryBtn">
+            <div class="device" style="border: 1px solid rgba(190,150,70,0.13);">
+                <div class="screw top-left"></div>
+                <div class="screw top-right"></div>
+                <div class="screw bottom-left"></div>
+                <div class="screw bottom-right"></div>
+
+                <div class="device-title">FLOATING</div>
+
+                <div class="screen-bezel" style="position:relative; overflow:hidden;">
+                    <div class="screen-glass" style="background: #050403;">
+                        <!-- Mini floating polaroids inside the screen -->
+                        <div class="fg-preview">
+                            <div class="fg-pol" style="left:8%;  top:10%; width:72px; height:90px; transform:rotate(-5deg); animation: fgFloat1 4.5s ease-in-out infinite;"><img src="image/3.jpeg" alt="p"></div>
+                            <div class="fg-pol" style="left:38%; top:22%; width:58px; height:74px; transform:rotate(3deg);  animation: fgFloat2 5.5s ease-in-out 0.4s infinite;"><img src="image/7.jpeg" alt="p"></div>
+                            <div class="fg-pol" style="left:66%; top:8%;  width:66px; height:84px; transform:rotate(-2deg); animation: fgFloat1 6s   ease-in-out 0.8s infinite;"><img src="image/11.jpeg" alt="p"></div>
+                            <div class="fg-pol" style="left:15%; top:50%; width:60px; height:76px; transform:rotate(6deg);  animation: fgFloat2 5s   ease-in-out 0.2s infinite;"><img src="image/5.jpeg" alt="p"></div>
+                            <div class="fg-pol" style="left:52%; top:48%; width:70px; height:88px; transform:rotate(-4deg); animation: fgFloat1 6.5s ease-in-out 1.0s infinite;"><img src="image/9.jpeg" alt="p"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="menu-title">GALLERY</div>
+                <div class="menu-desc">Foto melayang bebas<br>dengan efek depth</div>
             </div>
         </a>
     </div>
