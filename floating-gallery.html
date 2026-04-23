@@ -57,7 +57,7 @@
         .gallery-header {
             position: fixed; top: 0; left: 0; right: 0;
             z-index: 100;
-            padding: 22px 30px 18px;
+            padding: 40px 40px 20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -343,11 +343,284 @@
             50%      { opacity: 0.55; }
         }
 
-        /* ─── Mobile adjustments ─── */
+        /* ═══════════════════════════════════════════
+           MOBILE EXPERIENCE (≤600px) — Canvas World
+        ═══════════════════════════════════════════ */
         @media (max-width: 600px) {
+            .gallery-canvas, .scroll-hint, #petalCanvas { display: none !important; }
+            html, body { overflow: hidden; height: 100%; }
+            .gallery-header {
+                position: fixed; top: 0; left: 0; right: 0;
+                padding: 14px 16px 12px;
+                background: rgba(13,11,10,0.88);
+                backdrop-filter: blur(18px);
+                -webkit-backdrop-filter: blur(18px);
+                border-bottom: 1px solid rgba(200,152,106,0.13);
+                z-index: 200;
+            }
+            .header-title { font-size: 21px; }
+            .header-sub { font-size: 9px; letter-spacing: 2px; }
+            .back-btn { font-size: 10px; letter-spacing: 2px; }
+            .mobile-gallery { display: block !important; }
             .lb-nav { width: 36px; height: 48px; font-size: 18px; }
             .lb-prev { left: 6px; }
             .lb-next { right: 6px; }
+            .lb-frame { padding: 10px 10px 40px; }
+            .lb-img-wrap img { max-width: 92vw; max-height: 70vh; }
+        }
+
+        /* ─── Mobile Gallery: scrollable floating world ─── */
+        .mobile-gallery {
+            display: none;
+            position: fixed;
+            left: 0; right: 0;
+            top: 52px; bottom: 0;
+            overflow-y: scroll;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-y;
+            z-index: 10;
+        }
+        /* Ambient glow */
+        .mob-glow {
+            position: fixed;
+            left: 0; right: 0;
+            top: 52px; bottom: 0;
+            pointer-events: none;
+            z-index: 11;
+            background:
+                radial-gradient(ellipse 80% 40% at 50% 30%, rgba(190,140,50,0.06) 0%, transparent 70%),
+                radial-gradient(ellipse 50% 50% at 15% 70%, rgba(110,65,20,0.07) 0%, transparent 55%);
+        }
+        /* Scrollable world — tall, full width */
+        .mob-world {
+            position: relative;
+            width: 100%;
+            height: 148vh;
+            cursor: default;
+        }
+        /* Each polaroid */
+        .mob-pol {
+            position: absolute;
+            cursor: pointer;
+            will-change: transform;
+            transition: filter 0.2s, box-shadow 0.2s;
+        }
+        .mob-pol .pf {
+            background: #f0e8d8;
+            border-radius: 3px;
+            position: relative;
+            overflow: hidden;
+        }
+        .mob-pol .pf::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 50%);
+            pointer-events: none; border-radius: 2px;
+        }
+        .mob-pol .pf img {
+            display: block;
+            width: 100%; height: 100%;
+            object-fit: cover; border-radius: 2px;
+        }
+        .mob-pol .pc {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            text-align: center;
+            font-family: 'Courier Prime', monospace;
+            color: rgba(70,50,25,0.78);
+            letter-spacing: 1px;
+            pointer-events: none;
+        }
+        .mob-pol.pressing {
+            z-index: 999 !important;
+            filter: brightness(1.14) !important;
+        }
+        /* Scroll hint */
+        .mob-drag-hint {
+            position: fixed;
+            bottom: 22px; left: 50%;
+            transform: translateX(-50%);
+            z-index: 150;
+            display: flex; align-items: center; gap: 7px;
+            opacity: 0.45;
+            font-family: 'Courier Prime', monospace;
+            font-size: 9px; letter-spacing: 3px;
+            text-transform: uppercase; color: #dcd0ba;
+            pointer-events: none;
+            animation: hintPulse 2.5s ease-in-out infinite;
+            white-space: nowrap;
+            transition: opacity 0.8s;
+        }
+        .mob-drag-hint.hidden { opacity: 0 !important; animation: none; }
+        .mob-drag-hint svg { width:14px; height:14px; fill:none; stroke:#dcd0ba; stroke-width:1.5; }
+
+        /* ─── Mobile center title ─── */
+        .mob-center-title {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 12vh;
+            text-align: center;
+            pointer-events: none;
+            z-index: 20;
+            animation: quoteFloat 6s ease-in-out infinite;
+        }
+        .mob-date-big {
+            font-family: 'Dancing Script', cursive;
+            font-size: clamp(42px, 12vw, 62px);
+            color: rgba(220, 195, 120, 0.82);
+            text-shadow:
+                0 0 30px rgba(190,140,50,0.45),
+                0 0 60px rgba(190,140,50,0.15);
+            letter-spacing: 2px;
+            line-height: 1;
+            white-space: nowrap;
+        }
+        .mob-date-sub {
+            margin-top: 6px;
+            font-family: 'Courier Prime', monospace;
+            font-size: 9px;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            color: rgba(200, 175, 100, 0.35);
+        }
+
+        /* ─── Hero Card (featured photo) ─── */
+        .mob-hero {
+            position: relative;
+            margin: 24px auto 0;
+            width: min(320px, 88vw);
+        }
+        .mob-hero .pol-frame {
+            background: #f0e8d8;
+            padding: 10px 10px 42px;
+            border-radius: 3px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.75), 0 0 50px rgba(190,140,50,0.2);
+            transform: rotate(-1.5deg);
+            transition: transform 0.4s cubic-bezier(0.175,0.885,0.32,1.275), box-shadow 0.3s;
+        }
+        .mob-hero.touched .pol-frame {
+            transform: rotate(0deg) scale(1.03);
+            box-shadow: 0 28px 80px rgba(0,0,0,0.85), 0 0 70px rgba(190,140,50,0.35);
+        }
+        .mob-hero .pol-frame img {
+            width: 100%; aspect-ratio: 4/3;
+            object-fit: cover; display: block;
+            border-radius: 2px;
+        }
+        .mob-hero .pol-caption {
+            position: absolute; bottom: 13px; left: 0; right: 0;
+            text-align: center;
+            font-family: 'Courier Prime', monospace;
+            font-size: 11px; color: rgba(80,55,30,0.8);
+            letter-spacing: 1.5px;
+        }
+        .mob-hero-label {
+            text-align: center;
+            margin: 16px 0 8px;
+            font-size: 10px; letter-spacing: 5px;
+            text-transform: uppercase;
+            color: rgba(190,150,70,0.6);
+        }
+
+        /* ─── Swipe Card Stack ─── */
+        .mob-swipe-section {
+            margin: 32px 0 0;
+            padding: 0 18px;
+        }
+        .mob-section-title {
+            font-size: 10px; letter-spacing: 5px;
+            text-transform: uppercase;
+            color: rgba(220,208,186,0.35);
+            margin-bottom: 18px;
+            padding-left: 4px;
+        }
+        .mob-swipe-track {
+            display: flex;
+            gap: 14px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 12px;
+            scrollbar-width: none;
+        }
+        .mob-swipe-track::-webkit-scrollbar { display: none; }
+        .mob-card {
+            flex: 0 0 min(200px, 55vw);
+            scroll-snap-align: center;
+            cursor: pointer;
+            transition: transform 0.25s cubic-bezier(0.175,0.885,0.32,1.275);
+        }
+        .mob-card:active { transform: scale(0.95); }
+        .mob-card .pol-frame {
+            background: #f0e8d8;
+            padding: 8px 8px 34px;
+            border-radius: 3px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+        }
+        .mob-card .pol-frame img {
+            width: 100%; aspect-ratio: 3/4;
+            object-fit: cover; display: block; border-radius: 2px;
+        }
+        .mob-card .pol-caption {
+            position: absolute; /* will be relative inside frame */
+            bottom: 10px; left: 0; right: 0;
+            text-align: center;
+            font-family: 'Courier Prime', monospace;
+            font-size: 10px; color: rgba(80,55,30,0.7);
+            letter-spacing: 1px;
+        }
+        .mob-card .pol-frame { position: relative; }
+
+        /* Swipe hint icon */
+        .swipe-hint {
+            display: flex; align-items: center; gap: 6px;
+            justify-content: center;
+            margin: 10px 0 0;
+            opacity: 0.4;
+            font-size: 9px; letter-spacing: 3px;
+            text-transform: uppercase; color: #dcd0ba;
+            animation: hintPulse 2.5s ease-in-out infinite;
+        }
+        .swipe-hint svg { width:14px; height:14px; fill:none; stroke:#dcd0ba; stroke-width:1.5; }
+
+        /* ─── Bottom CTA section ─── */
+        .mob-cta {
+            margin: 40px 18px 0;
+            padding: 24px 20px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(200,152,106,0.1);
+            border-radius: 12px;
+            text-align: center;
+        }
+        .mob-cta-date {
+            font-size: 28px;
+            font-family: 'Dancing Script', cursive;
+            color: rgba(190,150,70,0.8);
+            margin-bottom: 8px;
+        }
+        .mob-cta-sub {
+            font-size: 9px; letter-spacing: 4px;
+            text-transform: uppercase;
+            color: rgba(220,208,186,0.3);
+            margin-bottom: 20px;
+        }
+        .mob-cta-btn {
+            display: inline-block;
+            padding: 10px 26px;
+            border: 1px solid rgba(200,152,106,0.35);
+            border-radius: 40px;
+            text-decoration: none;
+            font-family: 'Courier Prime', monospace;
+            font-size: 10px; letter-spacing: 3px;
+            text-transform: uppercase;
+            color: rgba(220,208,186,0.7);
+            transition: all 0.3s;
+        }
+        .mob-cta-btn:active {
+            background: rgba(200,152,106,0.15);
+            color: #dcd0ba;
         }
 
         /* ─── Intro overlay ─── */
@@ -431,9 +704,9 @@
     </div>
 
     <!-- Chapter watermark labels -->
-    <div class="chapter-label" style="font-size:110px; left:1%; top:18%; transform:rotate(-14deg);">awal mula</div>
-    <div class="chapter-label" style="font-size:100px; left:32%; top:68%; transform:rotate(-7deg);">semakin dekat</div>
-    <div class="chapter-label" style="font-size:105px; right:0%; top:28%; transform:rotate(10deg);">sekarang</div>
+    <div class="chapter-label" style="font-size:110px; left:1%; top:18%; transform:rotate(-14deg); opacity:0.03;">awal mula</div>
+    <div class="chapter-label" style="font-size:100px; left:32%; top:68%; transform:rotate(-7deg); opacity:0.025;">semakin dekat</div>
+    <div class="chapter-label" style="font-size:105px; right:0%; top:28%; transform:rotate(10deg); opacity:0.025;">sekarang</div>
 
     <!-- Header -->
     <header class="gallery-header">
@@ -442,7 +715,7 @@
             KEMBALI
         </a>
         <div class="header-title">Floating Gallery</div>
-        <div class="header-sub">MOVE MOUSE<br>TO EXPLORE</div>
+        <div class="header-sub" id="headerSub">MOVE MOUSE<br>TO EXPLORE</div>
     </header>
 
     <!-- Gallery canvas (parallax world) -->
@@ -452,11 +725,31 @@
         </div>
     </div>
 
-    <!-- Scroll hint -->
+    <!-- Scroll hint (desktop only) -->
     <div class="scroll-hint">
         <span>drag &amp; explore</span>
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><polyline points="9 13 12 16 15 13"/></svg>
     </div>
+
+    <!-- ═══ MOBILE GALLERY: canvas world (hidden on desktop) ═══ -->
+    <div class="mobile-gallery" id="mobileGallery">
+        <div class="mob-glow"></div>
+        <div class="mob-world" id="mobWorld">
+            <!-- Center date title -->
+            <div class="mob-center-title">
+                <div class="mob-date-big">26.09.24</div>
+                <div class="mob-date-sub">kenangan kita</div>
+            </div>
+            <!-- Polaroids injected by mobile JS -->
+        </div>
+    </div>
+
+    <!-- Drag hint (mobile only, outside gallery div so it stays fixed) -->
+    <div class="mob-drag-hint" id="mobDragHint">
+        <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M15 7l5 5-5 5"/><path d="M19 12H5"/><path d="M9 7l-5 5 5 5"/></svg>
+        <span>drag to explore</span>
+    </div>
+
 
     <!-- Lightbox -->
     <div class="lightbox" id="lightbox" role="dialog" aria-modal="true">
@@ -474,6 +767,235 @@
         <button class="lb-close" id="lbClose" aria-label="Tutup">&#10005;</button>
         <div class="lb-counter" id="lbCounter"></div>
     </div>
+
+    <!-- ═══ Music Player ═══ -->
+    <div id="musicPlayer">
+        <audio id="bgAudio" preload="none"></audio>
+        <div id="mpTrack">
+            <div id="mpTitle">—</div>
+            <div id="mpArtist">—</div>
+        </div>
+        <div id="mpControls">
+            <button id="mpPrev" title="Sebelumnya">&#9664;&#9664;</button>
+            <button id="mpPlay" title="Play / Pause">&#9654;</button>
+            <button id="mpNext" title="Berikutnya">&#9654;&#9654;</button>
+        </div>
+        <div id="mpBarWrap"><div id="mpBar"></div></div>
+    </div>
+
+    <style>
+        /* ── Music Player ── */
+        #musicPlayer {
+            position: fixed;
+            bottom: 24px;
+            right: 22px;
+            z-index: 9500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            background: rgba(13, 10, 8, 0.78);
+            border: 1px solid rgba(190,145,55,0.18);
+            border-radius: 40px;
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.55), 0 0 20px rgba(190,140,50,0.08);
+            transition: opacity 0.4s, transform 0.4s;
+            animation: mpSlideIn 0.7s cubic-bezier(0.175,0.885,0.32,1.275) both;
+            animation-delay: 2s;
+        }
+        @keyframes mpSlideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        #mpTrack {
+            max-width: 140px;
+            overflow: hidden;
+        }
+        #mpTitle {
+            font-family: 'Courier Prime', monospace;
+            font-size: 10px;
+            letter-spacing: 1.5px;
+            color: rgba(220,208,186,0.9);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
+        }
+        #mpArtist {
+            font-family: 'Courier Prime', monospace;
+            font-size: 9px;
+            letter-spacing: 1px;
+            color: rgba(190,150,70,0.6);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 2px;
+        }
+        #mpControls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        #mpControls button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: rgba(220,208,186,0.55);
+            font-size: 10px;
+            padding: 4px 5px;
+            border-radius: 50%;
+            transition: color 0.2s, background 0.2s, transform 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+        }
+        #mpControls button:hover {
+            color: #dcd0ba;
+            background: rgba(190,145,55,0.15);
+        }
+        #mpPlay {
+            font-size: 13px !important;
+            color: rgba(220,208,186,0.85) !important;
+            width: 32px !important;
+            height: 32px !important;
+            background: rgba(190,145,55,0.12) !important;
+            border: 1px solid rgba(190,145,55,0.25) !important;
+        }
+        #mpPlay:hover {
+            background: rgba(190,145,55,0.28) !important;
+            color: #f0e8d8 !important;
+            transform: scale(1.08);
+        }
+        #mpBarWrap {
+            width: 52px;
+            height: 3px;
+            background: rgba(220,208,186,0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            align-self: flex-end;
+            margin-bottom: 2px;
+        }
+        #mpBar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, rgba(190,145,55,0.6), rgba(220,190,90,0.9));
+            border-radius: 3px;
+            transition: width 0.8s linear;
+        }
+        @media (max-width: 600px) {
+            #musicPlayer {
+                bottom: 14px;
+                right: 12px;
+                padding: 8px 12px;
+                gap: 8px;
+            }
+            #mpTrack { max-width: 110px; }
+        }
+    </style>
+
+    <script>
+    (function() {
+        const PLAYLIST = [
+            {
+                src:    'sound/I\'d like to watch you sleeping _ lirik dan musik oleh Sal Priadi.mp3',
+                title:  'I\'d Like to Watch You Sleeping',
+                artist: 'Sal Priadi'
+            },
+            {
+                src:    'sound/Abe Parker - Butterflies _ Lirik Terjemahan.mp3',
+                title:  'Butterflies',
+                artist: 'Abe Parker'
+            }
+        ];
+
+        let currentIdx = 0;
+        let isPlaying  = false;
+
+        const audio   = document.getElementById('bgAudio');
+        const btnPlay = document.getElementById('mpPlay');
+        const btnPrev = document.getElementById('mpPrev');
+        const btnNext = document.getElementById('mpNext');
+        const titleEl = document.getElementById('mpTitle');
+        const artistEl= document.getElementById('mpArtist');
+        const barEl   = document.getElementById('mpBar');
+
+        function loadTrack(idx, autoPlay) {
+            currentIdx = ((idx % PLAYLIST.length) + PLAYLIST.length) % PLAYLIST.length;
+            const track = PLAYLIST[currentIdx];
+            audio.src   = track.src;
+            titleEl.textContent  = track.title;
+            artistEl.textContent = track.artist;
+            barEl.style.width = '0%';
+            if (autoPlay) {
+                audio.play().then(() => {
+                    isPlaying = true;
+                    btnPlay.innerHTML = '&#9646;&#9646;';
+                }).catch(() => {});
+            }
+        }
+
+        function togglePlay() {
+            if (audio.paused) {
+                if (!audio.src) loadTrack(0, false);
+                audio.play().then(() => {
+                    isPlaying = true;
+                    btnPlay.innerHTML = '&#9646;&#9646;';
+                }).catch(() => {});
+            } else {
+                audio.pause();
+                isPlaying = false;
+                btnPlay.innerHTML = '&#9654;';
+            }
+        }
+
+        function nextTrack() {
+            loadTrack(currentIdx + 1, true);
+        }
+
+        /* Auto next when song ends */
+        audio.addEventListener('ended', () => {
+            console.log('Track ended, playing next...');
+            nextTrack();
+        });
+
+        /* Progress bar */
+        audio.addEventListener('timeupdate', () => {
+            if (audio.duration) {
+                barEl.style.width = (audio.currentTime / audio.duration * 100) + '%';
+            }
+        });
+
+        btnPlay.addEventListener('click', togglePlay);
+        btnPrev.addEventListener('click', () => {
+            /* If >3s in, restart; else go to prev */
+            if (audio.currentTime > 3) {
+                audio.currentTime = 0;
+            } else {
+                loadTrack(currentIdx - 1, isPlaying);
+            }
+        });
+        btnNext.addEventListener('click', () => loadTrack(currentIdx + 1, isPlaying));
+
+        /* Start playing when user dismisses intro or clicks anywhere */
+        const intro = document.getElementById('introOverlay');
+        const startAudio = () => {
+            if (!isPlaying) {
+                loadTrack(0, true);
+            }
+        };
+
+        if (intro) {
+            intro.addEventListener('click', startAudio, { once: true });
+        }
+        document.addEventListener('click', startAudio, { once: true });
+
+        /* Pre-load first track info */
+        loadTrack(0, false);
+    })();
+    </script>
 
     <script src="transitions.js"></script>
 
@@ -661,8 +1183,34 @@
 
         const world = document.getElementById('galleryWorld');
 
+        /* Mobile: gunakan layout yang disesuaikan */
+        const isMobile = window.innerWidth <= 600;
+
+        /* Layout mobile: posisi lebih rapi, ukuran lebih kecil */
+        const LAYOUT_MOBILE = [
+            //  left%  top%   w    depth rot anim  delay
+            [  2,   5,  130,  0,  -5,  1,  0.0  ],
+            [ 40,  -2,  115,  0,   4,  2,  0.20 ],
+            [  5,  32,  120,  0,  -7,  3,  0.35 ],
+            [ 42,  22,  110,  0,   6,  4,  0.12 ],
+            [  8,  58,  118,  0,  -4,  5,  0.28 ],
+            [ 38,  50,  125,  1,  -2,  6,  0.08 ],
+            [  3,  80,  120,  1,   4,  7,  0.30 ],
+            [ 10,  30,  220,  3,   0,  1,  0.0  ], // HERO
+            [ 48,  40,  130,  2,   2,  2,  0.18 ],
+            [ 30,  70,  118,  1,  -5,  3,  0.40 ],
+            [ 55,  62,  125,  2,   3,  4,  0.45 ],
+            [ 60,  10,  122,  1,  -3,  5,  0.15 ],
+            [ 72,  -2,  110,  1,   5,  6,  0.30 ],
+            [ 58,  38,  130,  2,  -2,  7,  0.22 ],
+            [ 70,  28,  135,  2,   4,  8,  0.50 ],
+            [ 62,  60,  120,  2,  -1,  1,  0.55 ],
+        ];
+
+        const activeLayout = isMobile ? LAYOUT_MOBILE : LAYOUT;
+
         PHOTOS.forEach((photo, i) => {
-            const cfg = LAYOUT[i] || LAYOUT[i % LAYOUT.length];
+            const cfg = activeLayout[i] || activeLayout[i % activeLayout.length];
             const [left, top, w, depth, rot, animIdx, delay] = cfg;
             const isHero = (i === HERO_IDX);
             const h = Math.round(w * (isHero ? 0.75 : 0.72));
@@ -701,6 +1249,12 @@
             el.addEventListener('click', () => openLightbox(i));
             world.appendChild(el);
         });
+
+        /* Update header sub-text di mobile */
+        if (isMobile) {
+            const sub = document.getElementById('headerSub');
+            if (sub) sub.innerHTML = 'DRAG<br>TO EXPLORE';
+        }
 
         /* ─── Parallax on mouse move ─── */
         const canvas = document.getElementById('galleryCanvas');
@@ -749,6 +1303,7 @@
             updateLightbox();
             lightbox.classList.add('active');
         }
+        window.openLightbox = openLightbox; // expose for mobile script
         function closeLightbox() { lightbox.classList.remove('active'); }
         function updateLightbox() {
             const photo = PHOTOS[currentIdx];
@@ -791,6 +1346,148 @@
             hint.style.opacity = '0';
             hint.style.transition = 'opacity 0.8s';
         }, { once: true });
+
+    })();
+    </script>
+
+    <!-- ═══ Mobile JS: canvas world engine ═══ -->
+    <script>
+    (function () {
+        if (window.innerWidth > 600) return;
+
+        /* ── Photo data ── */
+        const PHOTOS = [
+            { src:'image/1.jpeg',  cap:'26.09.24' },
+            { src:'image/2.jpeg',  cap:'26.09.24' },
+            { src:'image/3.jpeg',  cap:'26.09.24' },
+            { src:'image/4.jpeg',  cap:'26.09.24' },
+            { src:'image/5.jpeg',  cap:'26.09.24' },
+            { src:'image/6.jpeg',  cap:'26.09.24' },
+            { src:'image/7.jpeg',  cap:'26.09.24' },
+            { src:'image/8.jpeg',  cap:'26.09.24' },
+            { src:'image/9.jpeg',  cap:'26.09.24' },
+            { src:'image/10.jpeg', cap:'26.09.24' },
+            { src:'image/11.jpeg', cap:'26.09.24' },
+            { src:'image/12.jpeg', cap:'26.09.24' },
+            { src:'image/13.jpeg', cap:'26.09.24' },
+            { src:'image/14.jpeg', cap:'26.09.24' },
+            { src:'image/15.png',  cap:'26.09.24' },
+        ];
+
+        /* ── Layout: [centerVW, topVH, sizeIdx, rot, z]
+           centerVW = CENTER X of photo in vw (photo width subtracted in JS)
+           topVH    = top of photo in vh, spaced ≥28vh apart to avoid overlap
+           Photos alternate left-center-right for visual rhythm */
+        const LAYOUT = [
+            // cVW  tVH  sz  rot    z
+            [  12,   3,   0,  -13,   6 ],  // 0 small, far left, tilted strong
+            [  83,   4,   0,    9,   5 ],  // 1 small, far right
+            [  14,  20,   1,  -10,  12 ],  // 2 medium, left side
+            [  82,  18,   0,   12,   7 ],  // 3 small, right edge
+            [  50,  35,   3,   -2,  50 ],  // 4 HERO — centered, xlarge
+            [   6,  48,   1,   -7,  11 ],  // 5 left peek, medium
+            [  86,  50,   1,    9,   9 ],  // 6 right peek, medium
+            [  32,  62,   2,   -4,  18 ],  // 7 center-left, large
+            [  78,  63,   0,   13,   6 ],  // 8 far right, small
+            [   9,  76,   0,  -14,   7 ],  // 9 far left, small
+            [  58,  74,   1,    6,  14 ],  // 10 center-right, medium
+            [  10,  90,   2,  -11,  16 ],  // 11 left, large
+            [  83,  90,   1,   10,  11 ],  // 12 right, medium
+            [  32, 104,   1,   -5,  13 ],  // 13 center-left, medium
+            [  68, 108,   2,    8,  18 ],  // 14 right, large
+        ];
+
+        const SIZES = [
+            { w: 95,  pad: '7px 7px 28px',  capFs: '9px'  },  // 0 small  (far)
+            { w: 145, pad: '8px 8px 36px',  capFs: '10px' },  // 1 medium
+            { w: 188, pad:'10px 10px 42px', capFs: '11px' },  // 2 large
+            { w: 245, pad:'12px 12px 54px', capFs: '12px' },  // 3 hero
+        ];
+
+        function shadowForZ(z) {
+            const d = Math.min(z / 50, 1);
+            const blur  = 4  + d * 55;
+            const alpha = 0.22 + d * 0.63;
+            const offsetY = 2 + d * 22;
+            const glow = z >= 40
+                ? `, 0 0 50px rgba(190,140,50,0.28), 0 0 90px rgba(190,140,50,0.10)`
+                : '';
+            return `0 ${offsetY}px ${blur}px rgba(0,0,0,${alpha})${glow}`;
+        }
+        function filterForZ(z) {
+            if (z >= 40) return 'brightness(1.10) saturate(1.12)';
+            if (z <= 7)  return 'brightness(0.58) saturate(0.72) blur(1px)';
+            const d = (z - 7) / 33;
+            return `brightness(${0.64+d*0.36}) saturate(${0.76+d*0.24})`;
+        }
+
+        const world = document.getElementById('mobWorld');
+        const vw = window.innerWidth / 100;
+        const vh = window.innerHeight / 100;
+
+        PHOTOS.forEach((ph, i) => {
+            const [cVW, tVH, sIdx, rot, z] = LAYOUT[i] || LAYOUT[i % LAYOUT.length];
+            const sz = SIZES[sIdx];
+            const h  = Math.round(sz.w * 0.74);
+            const leftPx = Math.max(4, Math.min(
+                window.innerWidth - sz.w - 4,
+                cVW * vw - sz.w / 2
+            ));
+            /* Vary float animation per photo */
+            const animIdx  = (i % 8) + 1;
+            const floatDur = z >= 40 ? 8 : (5.2 + (i % 5) * 0.7);  // hero slower
+            const delay    = (i * 0.38) % 4;
+
+            const el = document.createElement('div');
+            el.className = 'mob-pol';
+            el.dataset.idx = i;
+            el.style.cssText = `
+                left: ${leftPx}px;
+                top:  ${tVH * vh}px;
+                width: ${sz.w}px;
+                z-index: ${z};
+                --r: ${rot}deg;
+                filter: ${filterForZ(z)};
+                animation: float${animIdx} ${floatDur}s ease-in-out ${delay}s infinite;
+            `;
+            el.innerHTML = `
+                <div class="pf" style="padding:${sz.pad}; box-shadow:${shadowForZ(z)};">
+                    <img src="${ph.src}" alt="${ph.cap}" loading="lazy" draggable="false"
+                         style="height:${h}px;">
+                    <div class="pc" style="font-size:${sz.capFs};">${ph.cap}</div>
+                </div>`;
+            world.appendChild(el);
+
+        });
+
+        /* ── Touch press feedback ── */
+        world.addEventListener('touchstart', e => {
+            const pol = e.target.closest('.mob-pol');
+            if (pol) pol.classList.add('pressing');
+        }, { passive: true });
+        world.addEventListener('touchend', () => {
+            document.querySelectorAll('.mob-pol.pressing').forEach(p => p.classList.remove('pressing'));
+        }, { passive: true });
+
+        /* ── Tap to open lightbox ── */
+        let scrolled = false;
+        const gallery = document.getElementById('mobileGallery');
+        gallery.addEventListener('scroll', () => {
+            scrolled = true;
+            const hint = document.getElementById('mobDragHint');
+            if (hint) hint.classList.add('hidden');
+        }, { once: true, passive: true });
+
+        world.addEventListener('click', e => {
+            const pol = e.target.closest('.mob-pol');
+            if (!pol) return;
+            const idx = parseInt(pol.dataset.idx, 10);
+            if (window.openLightbox) window.openLightbox(idx);
+        });
+
+        /* ── Header text ── */
+        const sub = document.getElementById('headerSub');
+        if (sub) sub.innerHTML = 'SCROLL<br>TO EXPLORE';
 
     })();
     </script>
