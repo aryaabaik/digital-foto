@@ -100,6 +100,13 @@
             background-size: 200px 200px;
         }
 
+        /* Dust particles */
+        #dustCanvas {
+            position: fixed; inset: 0; z-index: 1;
+            pointer-events: none;
+            opacity: 0.25;
+        }
+
         body > * { position: relative; z-index: 1; }
 
         /* ══════════════════════════════════════
@@ -523,6 +530,7 @@
 </head>
 <body>
 
+    <canvas id="dustCanvas"></canvas>
     <!-- Cinematic intro overlay -->
     <div class="page-intro"></div>
 
@@ -603,6 +611,50 @@
             el.addEventListener('mouseenter', () => ring.classList.add('expanded'));
             el.addEventListener('mouseleave', () => ring.classList.remove('expanded'));
         });
+        document.addEventListener('mouseup',   () => {
+            ring.classList.remove('expanded');
+        });
+
+        /* -- Dust Particles -- */
+        const dustCanvas = document.getElementById('dustCanvas');
+        const dctx = dustCanvas.getContext('2d');
+        let dustParticles = [];
+        function resizeDust() {
+            dustCanvas.width = window.innerWidth;
+            dustCanvas.height = window.innerHeight;
+        }
+        resizeDust();
+        window.addEventListener('resize', resizeDust);
+        function createDust() {
+            dustParticles = [];
+            for(let i=0; i<45; i++) {
+                dustParticles.push({
+                    x: Math.random() * dustCanvas.width,
+                    y: Math.random() * dustCanvas.height,
+                    size: Math.random() * 2 + 0.5,
+                    vx: (Math.random() - 0.5) * 0.3,
+                    vy: (Math.random() - 0.5) * 0.3,
+                    opacity: Math.random() * 0.4 + 0.1
+                });
+            }
+        }
+        createDust();
+        function animateDust() {
+            dctx.clearRect(0,0, dustCanvas.width, dustCanvas.height);
+            dustParticles.forEach(p => {
+                p.x += p.vx; p.y += p.vy;
+                if(p.x < 0) p.x = dustCanvas.width;
+                if(p.x > dustCanvas.width) p.x = 0;
+                if(p.y < 0) p.y = dustCanvas.height;
+                if(p.y > dustCanvas.height) p.y = 0;
+                dctx.beginPath();
+                dctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+                dctx.fillStyle = `rgba(220, 208, 186, ${p.opacity})`;
+                dctx.fill();
+            });
+            requestAnimationFrame(animateDust);
+        }
+        animateDust();
 
         /* -- Film strip holes -- */
         const makeHoles = (id, count) => {
@@ -655,5 +707,6 @@
         });
     })();
     </script>
+    <script src="music.js"></script>
 </body>
 </html>

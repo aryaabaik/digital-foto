@@ -39,10 +39,26 @@
                 radial-gradient(ellipse at 50% 50%, #1c1510 0%, #0d0b0a 100%);
         }
 
-        /* Vignette */
+        /* ─── Warm center glow (atmospheric light) ─── */
+        .bg-warm-glow {
+            position: fixed; inset: 0; z-index: 1; pointer-events: none;
+            background: radial-gradient(ellipse 70% 55% at 50% 52%,
+                rgba(200,145,55,0.07) 0%,
+                rgba(180,110,35,0.04) 45%,
+                transparent 72%);
+            animation: glowBreath 8s ease-in-out infinite;
+        }
+        @keyframes glowBreath {
+            0%,100% { opacity: 0.8; transform: scale(1); }
+            50%      { opacity: 1;   transform: scale(1.05); }
+        }
+
+        /* Vignette — stronger on edges */
         .bg-vignette {
             position: fixed; inset: 0; z-index: 1; pointer-events: none;
-            background: radial-gradient(ellipse at 50% 50%, transparent 30%, rgba(0,0,0,0.75) 100%);
+            background:
+                radial-gradient(ellipse at 50% 50%, transparent 28%, rgba(0,0,0,0.82) 100%),
+                linear-gradient(to bottom, rgba(0,0,0,0.18) 0%, transparent 12%, transparent 88%, rgba(0,0,0,0.25) 100%);
         }
 
         /* ─── Petal canvas ─── */
@@ -57,39 +73,56 @@
         .gallery-header {
             position: fixed; top: 0; left: 0; right: 0;
             z-index: 100;
-            padding: 40px 40px 20px;
+            padding: 36px 40px 18px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: linear-gradient(to bottom, rgba(13,11,10,0.92) 0%, transparent 100%);
+            background: linear-gradient(to bottom, rgba(10,8,7,0.95) 0%, transparent 100%);
         }
 
         .back-btn {
             display: flex; align-items: center; gap: 8px;
             text-decoration: none;
-            color: rgba(220,208,186,0.5);
-            font-size: 12px;
+            color: rgba(220,208,186,0.45);
+            font-size: 11px;
             letter-spacing: 3px;
             text-transform: uppercase;
-            transition: color 0.3s;
+            transition: color 0.3s, letter-spacing 0.3s, text-shadow 0.3s;
+            padding: 8px 14px;
+            border-radius: 30px;
+            border: 1px solid transparent;
         }
-        .back-btn:hover { color: #dcd0ba; }
-        .back-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
+        .back-btn:hover {
+            color: #dcd0ba;
+            letter-spacing: 4px;
+            border-color: rgba(200,152,106,0.18);
+            background: rgba(200,152,106,0.06);
+            text-shadow: 0 0 14px rgba(200,152,106,0.35);
+        }
+        .back-btn:active { transform: scale(0.97); }
+        .back-btn svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; transition: transform 0.3s; }
+        .back-btn:hover svg { transform: translateX(-3px); }
 
         .header-title {
             font-family: 'Dancing Script', cursive;
             font-size: 28px;
             color: #dcd0ba;
-            text-shadow: 0 0 30px rgba(190,150,70,0.3);
+            text-shadow: 0 0 30px rgba(190,150,70,0.3), 0 0 60px rgba(190,150,70,0.1);
             letter-spacing: 1px;
+            animation: titleGlow 6s ease-in-out infinite;
+        }
+        @keyframes titleGlow {
+            0%,100% { text-shadow: 0 0 20px rgba(190,150,70,0.25), 0 0 50px rgba(190,150,70,0.08); }
+            50%      { text-shadow: 0 0 40px rgba(190,150,70,0.5),  0 0 80px rgba(190,150,70,0.18); }
         }
 
         .header-sub {
-            font-size: 11px;
+            font-size: 10px;
             letter-spacing: 4px;
             text-transform: uppercase;
-            color: rgba(220,208,186,0.3);
+            color: rgba(220,208,186,0.28);
             text-align: right;
+            transition: color 0.4s;
         }
 
         /* ─── Gallery canvas ─── */
@@ -111,9 +144,15 @@
             cursor: zoom-in;
             transform-style: preserve-3d;
             will-change: transform;
-            transition: transform 0.4s cubic-bezier(0.175,0.885,0.32,1.275),
-                        filter 0.35s ease,
-                        box-shadow 0.35s ease;
+            transition:
+                transform 0.45s cubic-bezier(0.175,0.885,0.32,1.275),
+                filter 0.4s ease,
+                z-index 0s;
+        }
+        /* Hover: lift up + scale slightly */
+        .float-photo:hover {
+            z-index: 200 !important;
+            transform: translateZ(var(--tz,0px)) scale(1.06) translateY(-8px) rotate(0deg) !important;
         }
 
         .float-photo img {
@@ -123,23 +162,33 @@
             border-radius: 4px;
         }
 
-        /* Polaroid-style frame */
+        /* Polaroid-style frame — depth-aware shadow */
         .float-photo .frame {
             position: relative;
             width: 100%; height: 100%;
             background: #f0e8d8;
-            padding: 8px 8px 32px 8px;
+            padding: 8px 8px 34px 8px;
             border-radius: 3px;
-            box-shadow:
-                0 6px 20px rgba(0,0,0,0.6),
+            box-shadow: var(--frame-shadow,
+                0 8px 24px rgba(0,0,0,0.65),
                 0 2px 6px rgba(0,0,0,0.4),
-                inset 0 1px 0 rgba(255,255,255,0.15);
+                inset 0 1px 0 rgba(255,255,255,0.18));
             overflow: hidden;
+            transition: box-shadow 0.4s ease;
+        }
+        /* Glass sheen on top */
+        .float-photo .frame::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 40%;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.08) 0%, transparent 100%);
+            pointer-events: none; border-radius: 2px 2px 0 0;
         }
 
         .float-photo .frame .img-wrap {
             width: 100%;
-            height: calc(100% - 24px);
+            height: calc(100% - 26px);
             overflow: hidden;
             border-radius: 2px;
         }
@@ -148,37 +197,28 @@
             border-radius: 2px;
             transition: transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94);
         }
+        .float-photo:hover .frame img { transform: scale(1.09); }
 
-        .float-photo:hover .frame img {
-            transform: scale(1.08);
-        }
-
-        /* Caption strip on polaroid */
+        /* Caption strip */
         .float-photo .caption {
             position: absolute;
-            bottom: 6px; left: 0; right: 0;
+            bottom: 7px; left: 0; right: 0;
             text-align: center;
             font-family: 'Courier Prime', monospace;
             font-size: 10px;
-            color: rgba(80,60,40,0.7);
-            letter-spacing: 1px;
+            color: rgba(80,60,40,0.72);
+            letter-spacing: 1.5px;
             pointer-events: none;
         }
 
-        /* Hover glow */
+        /* Hover: shadow lifts sharply, amber glow */
         .float-photo:hover .frame {
             box-shadow:
-                0 20px 55px rgba(0,0,0,0.8),
-                0 0 30px rgba(190,150,70,0.18),
-                inset 0 1px 0 rgba(255,255,255,0.2);
-        }
-
-        /* Hover brightness */
-        .float-photo {
-            filter: brightness(0.82) saturate(0.9);
-        }
-        .float-photo:hover {
-            filter: brightness(1.05) saturate(1.1);
+                0 28px 65px rgba(0,0,0,0.85),
+                0 8px 20px rgba(0,0,0,0.55),
+                0 0 40px rgba(190,150,70,0.22),
+                0 0 80px rgba(190,150,70,0.08),
+                inset 0 1px 0 rgba(255,255,255,0.25);
         }
 
         /* ─── Floating animations (8 variants) ─── */
@@ -218,9 +258,21 @@
             70%      { transform: translateY(-5px) rotate(var(--r)); }
         }
 
-        /* Entrance animation */
+        /* Entrance animations — 3 variants for natural variety */
         @keyframes photoEntrance {
             from { opacity: 0; transform: translateY(40px) scale(0.85) rotate(var(--r)); }
+            to   { opacity: 1; }
+        }
+        @keyframes photoEntranceLeft {
+            from { opacity: 0; transform: translateX(-35px) translateY(20px) scale(0.88) rotate(var(--r)); }
+            to   { opacity: 1; }
+        }
+        @keyframes photoEntranceRight {
+            from { opacity: 0; transform: translateX(30px) translateY(25px) scale(0.9) rotate(var(--r)); }
+            to   { opacity: 1; }
+        }
+        @keyframes photoEntranceFade {
+            from { opacity: 0; transform: scale(0.92) rotate(var(--r)); }
             to   { opacity: 1; }
         }
 
@@ -347,7 +399,7 @@
            MOBILE EXPERIENCE (≤600px) — Canvas World
         ═══════════════════════════════════════════ */
         @media (max-width: 600px) {
-            .gallery-canvas, .scroll-hint, #petalCanvas { display: none !important; }
+            .gallery-canvas, .scroll-hint { display: none !important; }
             html, body { overflow: hidden; height: 100%; }
             .gallery-header {
                 position: fixed; top: 0; left: 0; right: 0;
@@ -367,6 +419,14 @@
             .lb-next { right: 6px; }
             .lb-frame { padding: 10px 10px 40px; }
             .lb-img-wrap img { max-width: 92vw; max-height: 70vh; }
+        }
+        /* Daun kering tetap muncul di mobile — di atas gallery, bawah header */
+        @media (max-width: 600px) {
+            #petalCanvas {
+                display: block !important;
+                z-index: 15;
+                pointer-events: none;
+            }
         }
 
         /* ─── Mobile Gallery: scrollable floating world ─── */
@@ -669,21 +729,79 @@
         /* ─── Hero photo ─── */
         .float-photo.is-hero .frame {
             background: #f5ede0;
-            border: 1px solid rgba(190,150,60,0.35);
-            animation: heroPulse 4.5s ease-in-out infinite;
+            border: 1px solid rgba(190,150,60,0.3);
+            animation: heroPulse 5s ease-in-out infinite;
         }
         @keyframes heroPulse {
-            0%,100% { box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 55px rgba(190,140,50,0.25); }
-            50%      { box-shadow: 0 24px 70px rgba(0,0,0,0.85), 0 0 90px rgba(190,140,50,0.42); }
+            0%,100% { box-shadow: 0 22px 65px rgba(0,0,0,0.82), 0 0 60px rgba(190,140,50,0.28), 0 0 120px rgba(190,140,50,0.1); }
+            50%      { box-shadow: 0 28px 80px rgba(0,0,0,0.88), 0 0 100px rgba(190,140,50,0.48), 0 0 160px rgba(190,140,50,0.18); }
         }
         .float-photo.is-hero .caption {
-            font-size: 11.5px;
+            font-size: 12px;
             font-weight: bold;
-            color: rgba(110,75,30,0.9);
-            letter-spacing: 0.5px;
+            color: rgba(110,75,30,0.92);
+            letter-spacing: 0.8px;
         }
         .float-photo.is-hero {
-            filter: brightness(1.08) saturate(1.05) !important;
+            filter: brightness(1.1) saturate(1.08) !important;
+        }
+        .float-photo.is-hero:hover {
+            /* ─── Depth blur badges ─── */
+        /* Applied via JS inline style: blur(Xpx) */
+
+        /* ─── Cinematic Dust Particles ─── */
+        #dustCanvas {
+            position: fixed; inset: 0; z-index: 1;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        /* ─── Floating UI Polish ─── */
+        .slideshow-btn {
+            position: fixed; bottom: 25px; right: 30px;
+            z-index: 150;
+            background: rgba(13,11,10,0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(220,208,186,0.15);
+            color: #dcd0ba;
+            padding: 10px 18px;
+            border-radius: 30px;
+            font-family: 'Courier Prime', monospace;
+            font-size: 10px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .slideshow-btn:hover {
+            background: rgba(190,150,70,0.15);
+            border-color: rgba(190,150,70,0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+        }
+        .slideshow-btn.active {
+            background: #be9646;
+            color: #0d0b0a;
+            border-color: #be9646;
+        }
+        .slideshow-btn svg { width: 14px; height: 14px; fill: currentColor; }
+
+        /* ─── Chapter Label Polish ─── */
+        .chapter-label {
+            position: fixed; z-index: 3;
+            pointer-events: none; user-select: none;
+            font-family: 'Dancing Script', cursive;
+            color: rgba(190,145,55,0.04);
+            white-space: nowrap;
+            line-height: 1;
+            filter: blur(1px);
+            animation: chapterFloat 20s linear infinite alternate;
+        }
+        @keyframes chapterFloat {
+            0%   { transform: translate(0, 0) rotate(var(--rot)); }
+            100% { transform: translate(20px, 15px) rotate(calc(var(--rot) + 2deg)); }
         }
     </style>
 </head>
@@ -692,21 +810,22 @@
     <!-- Background layers -->
     <div class="bg-space"></div>
     <canvas id="petalCanvas"></canvas>
+    <canvas id="dustCanvas"></canvas>
+    <div class="bg-warm-glow"></div>
     <div class="bg-vignette"></div>
 
     <!-- Intro overlay -->
     <div class="intro-overlay" id="introOverlay">
         <div class="intro-quote">
-            setiap foto menyimpan cerita<br>
-            yang terlalu dalam untuk diucapkan
+            Memory Room
         </div>
         <div class="intro-sub">tap untuk masuk ke cerita kita</div>
     </div>
 
     <!-- Chapter watermark labels -->
-    <div class="chapter-label" style="font-size:110px; left:1%; top:18%; transform:rotate(-14deg); opacity:0.03;">awal mula</div>
-    <div class="chapter-label" style="font-size:100px; left:32%; top:68%; transform:rotate(-7deg); opacity:0.025;">semakin dekat</div>
-    <div class="chapter-label" style="font-size:105px; right:0%; top:28%; transform:rotate(10deg); opacity:0.025;">sekarang</div>
+    <div class="chapter-label" style="--rot:-14deg; font-size:110px; left:1%; top:18%; transform:rotate(-14deg);">awal mula</div>
+    <div class="chapter-label" style="--rot:-7deg; font-size:100px; left:32%; top:68%; transform:rotate(-7deg);">semakin dekat</div>
+    <div class="chapter-label" style="--rot:10deg; font-size:105px; right:0%; top:28%; transform:rotate(10deg);">sekarang</div>
 
     <!-- Header -->
     <header class="gallery-header">
@@ -731,14 +850,19 @@
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><polyline points="9 13 12 16 15 13"/></svg>
     </div>
 
+    <button class="slideshow-btn" id="slideshowBtn">
+        <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        <span>Auto Play</span>
+    </button>
+
     <!-- ═══ MOBILE GALLERY: canvas world (hidden on desktop) ═══ -->
     <div class="mobile-gallery" id="mobileGallery">
         <div class="mob-glow"></div>
         <div class="mob-world" id="mobWorld">
             <!-- Center date title -->
             <div class="mob-center-title">
-                <div class="mob-date-big">26.09.24</div>
-                <div class="mob-date-sub">kenangan kita</div>
+                <div class="mob-date-big">Memory </div>
+                <div class="mob-date-sub">Memory Rekap</div>
             </div>
             <!-- Polaroids injected by mobile JS -->
         </div>
@@ -769,236 +893,9 @@
     </div>
 
     <!-- ═══ Music Player ═══ -->
-    <div id="musicPlayer">
-        <audio id="bgAudio" preload="none"></audio>
-        <div id="mpTrack">
-            <div id="mpTitle">—</div>
-            <div id="mpArtist">—</div>
-        </div>
-        <div id="mpControls">
-            <button id="mpPrev" title="Sebelumnya">&#9664;&#9664;</button>
-            <button id="mpPlay" title="Play / Pause">&#9654;</button>
-            <button id="mpNext" title="Berikutnya">&#9654;&#9654;</button>
-        </div>
-        <div id="mpBarWrap"><div id="mpBar"></div></div>
-    </div>
-
-    <style>
-        /* ── Music Player ── */
-        #musicPlayer {
-            position: fixed;
-            bottom: 24px;
-            right: 22px;
-            z-index: 9500;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 14px;
-            background: rgba(13, 10, 8, 0.78);
-            border: 1px solid rgba(190,145,55,0.18);
-            border-radius: 40px;
-            backdrop-filter: blur(18px);
-            -webkit-backdrop-filter: blur(18px);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.55), 0 0 20px rgba(190,140,50,0.08);
-            transition: opacity 0.4s, transform 0.4s;
-            animation: mpSlideIn 0.7s cubic-bezier(0.175,0.885,0.32,1.275) both;
-            animation-delay: 2s;
-        }
-        @keyframes mpSlideIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-        #mpTrack {
-            max-width: 140px;
-            overflow: hidden;
-        }
-        #mpTitle {
-            font-family: 'Courier Prime', monospace;
-            font-size: 10px;
-            letter-spacing: 1.5px;
-            color: rgba(220,208,186,0.9);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            line-height: 1.3;
-        }
-        #mpArtist {
-            font-family: 'Courier Prime', monospace;
-            font-size: 9px;
-            letter-spacing: 1px;
-            color: rgba(190,150,70,0.6);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            margin-top: 2px;
-        }
-        #mpControls {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        #mpControls button {
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: rgba(220,208,186,0.55);
-            font-size: 10px;
-            padding: 4px 5px;
-            border-radius: 50%;
-            transition: color 0.2s, background 0.2s, transform 0.15s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 26px;
-            height: 26px;
-        }
-        #mpControls button:hover {
-            color: #dcd0ba;
-            background: rgba(190,145,55,0.15);
-        }
-        #mpPlay {
-            font-size: 13px !important;
-            color: rgba(220,208,186,0.85) !important;
-            width: 32px !important;
-            height: 32px !important;
-            background: rgba(190,145,55,0.12) !important;
-            border: 1px solid rgba(190,145,55,0.25) !important;
-        }
-        #mpPlay:hover {
-            background: rgba(190,145,55,0.28) !important;
-            color: #f0e8d8 !important;
-            transform: scale(1.08);
-        }
-        #mpBarWrap {
-            width: 52px;
-            height: 3px;
-            background: rgba(220,208,186,0.1);
-            border-radius: 3px;
-            overflow: hidden;
-            align-self: flex-end;
-            margin-bottom: 2px;
-        }
-        #mpBar {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, rgba(190,145,55,0.6), rgba(220,190,90,0.9));
-            border-radius: 3px;
-            transition: width 0.8s linear;
-        }
-        @media (max-width: 600px) {
-            #musicPlayer {
-                bottom: 14px;
-                right: 12px;
-                padding: 8px 12px;
-                gap: 8px;
-            }
-            #mpTrack { max-width: 110px; }
-        }
-    </style>
-
-    <script>
-    (function() {
-        const PLAYLIST = [
-            {
-                src:    'sound/I\'d like to watch you sleeping _ lirik dan musik oleh Sal Priadi.mp3',
-                title:  'I\'d Like to Watch You Sleeping',
-                artist: 'Sal Priadi'
-            },
-            {
-                src:    'sound/Abe Parker - Butterflies _ Lirik Terjemahan.mp3',
-                title:  'Butterflies',
-                artist: 'Abe Parker'
-            }
-        ];
-
-        let currentIdx = 0;
-        let isPlaying  = false;
-
-        const audio   = document.getElementById('bgAudio');
-        const btnPlay = document.getElementById('mpPlay');
-        const btnPrev = document.getElementById('mpPrev');
-        const btnNext = document.getElementById('mpNext');
-        const titleEl = document.getElementById('mpTitle');
-        const artistEl= document.getElementById('mpArtist');
-        const barEl   = document.getElementById('mpBar');
-
-        function loadTrack(idx, autoPlay) {
-            currentIdx = ((idx % PLAYLIST.length) + PLAYLIST.length) % PLAYLIST.length;
-            const track = PLAYLIST[currentIdx];
-            audio.src   = track.src;
-            titleEl.textContent  = track.title;
-            artistEl.textContent = track.artist;
-            barEl.style.width = '0%';
-            if (autoPlay) {
-                audio.play().then(() => {
-                    isPlaying = true;
-                    btnPlay.innerHTML = '&#9646;&#9646;';
-                }).catch(() => {});
-            }
-        }
-
-        function togglePlay() {
-            if (audio.paused) {
-                if (!audio.src) loadTrack(0, false);
-                audio.play().then(() => {
-                    isPlaying = true;
-                    btnPlay.innerHTML = '&#9646;&#9646;';
-                }).catch(() => {});
-            } else {
-                audio.pause();
-                isPlaying = false;
-                btnPlay.innerHTML = '&#9654;';
-            }
-        }
-
-        function nextTrack() {
-            loadTrack(currentIdx + 1, true);
-        }
-
-        /* Auto next when song ends */
-        audio.addEventListener('ended', () => {
-            console.log('Track ended, playing next...');
-            nextTrack();
-        });
-
-        /* Progress bar */
-        audio.addEventListener('timeupdate', () => {
-            if (audio.duration) {
-                barEl.style.width = (audio.currentTime / audio.duration * 100) + '%';
-            }
-        });
-
-        btnPlay.addEventListener('click', togglePlay);
-        btnPrev.addEventListener('click', () => {
-            /* If >3s in, restart; else go to prev */
-            if (audio.currentTime > 3) {
-                audio.currentTime = 0;
-            } else {
-                loadTrack(currentIdx - 1, isPlaying);
-            }
-        });
-        btnNext.addEventListener('click', () => loadTrack(currentIdx + 1, isPlaying));
-
-        /* Start playing when user dismisses intro or clicks anywhere */
-        const intro = document.getElementById('introOverlay');
-        const startAudio = () => {
-            if (!isPlaying) {
-                loadTrack(0, true);
-            }
-        };
-
-        if (intro) {
-            intro.addEventListener('click', startAudio, { once: true });
-        }
-        document.addEventListener('click', startAudio, { once: true });
-
-        /* Pre-load first track info */
-        loadTrack(0, false);
-    })();
-    </script>
-
     <script src="transitions.js"></script>
     <script src="music.js"></script>
+
 
     <!-- ═══ Falling Petals ═══ -->
     <script>
@@ -1053,13 +950,54 @@
             ctx.restore();
         }
 
-        /* ── Resize ── */
-        function resize() {
-            canvas.width  = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
         resize();
         window.addEventListener('resize', resize);
+
+        /* ── Cinematic Dust Particles ── */
+        const dustCanvas = document.getElementById('dustCanvas');
+        const dctx = dustCanvas.getContext('2d');
+        let dustParticles = [];
+        
+        function resizeDust() {
+            dustCanvas.width = window.innerWidth;
+            dustCanvas.height = window.innerHeight;
+        }
+        resizeDust();
+        window.addEventListener('resize', resizeDust);
+
+        function createDust() {
+            dustParticles = [];
+            for(let i=0; i<60; i++) {
+                dustParticles.push({
+                    x: Math.random() * dustCanvas.width,
+                    y: Math.random() * dustCanvas.height,
+                    size: Math.random() * 2.5 + 0.5,
+                    vx: (Math.random() - 0.5) * 0.4,
+                    vy: (Math.random() - 0.5) * 0.4,
+                    opacity: Math.random() * 0.5 + 0.2
+                });
+            }
+        }
+        createDust();
+
+        function animateDust() {
+            dctx.clearRect(0,0, dustCanvas.width, dustCanvas.height);
+            dustParticles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                if(p.x < 0) p.x = dustCanvas.width;
+                if(p.x > dustCanvas.width) p.x = 0;
+                if(p.y < 0) p.y = dustCanvas.height;
+                if(p.y > dustCanvas.height) p.y = 0;
+                
+                dctx.beginPath();
+                dctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+                dctx.fillStyle = `rgba(220, 208, 186, ${p.opacity})`;
+                dctx.fill();
+            });
+            requestAnimationFrame(animateDust);
+        }
+        animateDust();
 
         /* ── Leaf factory ── */
         function makeLeaf() {
@@ -1130,11 +1068,11 @@
         /* ─── Photo data with emotional captions ─── */
         const PHOTOS = [
             // Chapter 1 — Awal Mula
-            { src: 'image/1.jpeg',  caption: '26.09.24' },
-            { src: 'image/2.jpeg',  caption: '26.09.24' },
-            { src: 'image/3.jpeg',  caption: '26.09.24' },
-            { src: 'image/4.jpeg',  caption: '26.09.24' },
-            { src: 'image/5.jpeg',  caption: '26.09.24' },
+            { src: 'image/32.png',  caption: '26.09.24' },
+            { src: 'image/33.png',  caption: '26.09.24' },
+            { src: 'image/34.png',  caption: '26.09.24' },
+            { src: 'image/35.png',  caption: '26.09.24' },
+            { src: 'image/36.png',  caption: '26.09.24' },
             // Chapter 2 — Semakin Dekat
             { src: 'image/6.jpeg',  caption: '26.09.24' },
             { src: 'image/7.jpeg',  caption: '26.09.24' },
@@ -1146,8 +1084,16 @@
             { src: 'image/12.jpeg', caption: '26.09.24' },
             { src: 'image/13.jpeg', caption: '26.09.24' },
             { src: 'image/14.jpeg', caption: '26.09.24' },
+            { src: 'image/2.jpeg',  caption: '26.09.24' },
+            { src: 'image/3.jpeg',  caption: '26.09.24' },
             { src: 'image/15.png',  caption: '26.09.24' },
+            { src: 'image/16.png',  caption: '26.09.24' },
+            { src: 'image/17.png',  caption: '26.09.24' },
             { src: 'image/18.png',  caption: '26.09.24' },
+            { src: 'image/19.png',  caption: '26.09.24' },
+            { src: 'image/20.png',  caption: '26.09.24' },
+            { src: 'image/21.png',  caption: '26.09.24' },
+            { src: 'image/22.png',  caption: '26.09.24' },
         ];
 
         const HERO_IDX = 7; // index of the hero/focal photo
@@ -1167,29 +1113,46 @@
             [ 36, 26,  330, 3,  0, 1, 0.0  ], // HERO — large, centered, depth 3
             [ 57, 15,  210, 2,  2, 2, 0.18 ],
             [ 44, 62,  190, 1, -5, 3, 0.40 ],
-            [ 62, 44,  205, 2,  3, 4, 0.45 ],
+            [ 62, 44,  205, 2, 3, 4, 0.45 ],
             // ── Chapter 3: Sekarang — RIGHT zone, warmer, larger ──
             [ 73,  4,  200, 1, -3, 5, 0.15 ],
             [ 83, -3,  190, 1,  5, 6, 0.30 ],
             [ 72, 36,  220, 2, -2, 7, 0.22 ],
             [ 84, 26,  230, 2,  4, 8, 0.50 ],
             [ 78, 62,  210, 2, -1, 1, 0.55 ],
+            // ── Extra memories ──
+            [ 15, 85,  180, 0,  6, 2, 0.60 ],
+            [ 35, 80,  190, 1, -4, 3, 0.65 ],
+            [ 55, 88,  200, 2,  2, 4, 0.70 ],
+            [ 75, 82,  185, 1, -6, 5, 0.75 ],
+            [  5, -15, 170, 0, -8, 6, 0.80 ],
+            [ 25, -12, 180, 1,  7, 7, 0.85 ],
+            [ 65, -15, 190, 0, -3, 8, 0.90 ],
+            [ 85, -10, 175, 1,  5, 1, 0.95 ],
         ];
 
         const DEPTH_Z     = [0, 60, 130, 220];
-        const DEPTH_DIM   = [0.65, 0.78, 0.9, 1.0];
-        const DEPTH_SCALE = [0.78, 0.87, 0.95, 1.05];
+        // depth 0 = farthest/smallest, depth 3 = closest/largest
+        const DEPTH_BLUR  = [1.8, 0.8, 0, 0];    // px of blur: far = blurry
+        const DEPTH_BRITE = [0.58, 0.72, 0.88, 1.0]; // brightness
+        const DEPTH_SAT   = [0.68, 0.80, 0.90, 1.0]; // saturation
+        const DEPTH_SCALE = [0.76, 0.86, 0.95, 1.06];
+        // Depth-based frame shadows: far = soft big, near = tight sharp
+        const DEPTH_SHADOW = [
+            '0 4px 18px rgba(0,0,0,0.5), 0 1px 5px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
+            '0 8px 28px rgba(0,0,0,0.62), 0 2px 8px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.14)',
+            '0 14px 42px rgba(0,0,0,0.72), 0 4px 12px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.18)',
+            '0 22px 60px rgba(0,0,0,0.82), 0 6px 18px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.22)',
+        ];
         const FLOAT_ANIMS = ['float1','float2','float3','float4','float5','float6','float7','float8'];
         const FLOAT_DUR   = [5.5, 7, 6.2, 8, 5.8, 6.8, 7.4, 5.2];
+        // Entrance variants: 0=up, 1=left, 2=right, 3=fade
+        const ENTRANCE_ANIMS = ['photoEntrance','photoEntranceLeft','photoEntranceRight','photoEntranceFade'];
 
         const world = document.getElementById('galleryWorld');
-
-        /* Mobile: gunakan layout yang disesuaikan */
         const isMobile = window.innerWidth <= 600;
 
-        /* Layout mobile: posisi lebih rapi, ukuran lebih kecil */
         const LAYOUT_MOBILE = [
-            //  left%  top%   w    depth rot anim  delay
             [  2,   5,  130,  0,  -5,  1,  0.0  ],
             [ 40,  -2,  115,  0,   4,  2,  0.20 ],
             [  5,  32,  120,  0,  -7,  3,  0.35 ],
@@ -1197,7 +1160,7 @@
             [  8,  58,  118,  0,  -4,  5,  0.28 ],
             [ 38,  50,  125,  1,  -2,  6,  0.08 ],
             [  3,  80,  120,  1,   4,  7,  0.30 ],
-            [ 10,  30,  220,  3,   0,  1,  0.0  ], // HERO
+            [ 10,  30,  220,  3,   0,  1,  0.0  ],
             [ 48,  40,  130,  2,   2,  2,  0.18 ],
             [ 30,  70,  118,  1,  -5,  3,  0.40 ],
             [ 55,  62,  125,  2,   3,  4,  0.45 ],
@@ -1220,9 +1183,23 @@
             el.className = 'float-photo' + (isHero ? ' is-hero' : '');
             el.dataset.index = i;
 
-            const floatDur  = isHero ? 8 : FLOAT_DUR[animIdx - 1];
-            const floatAnim = isHero ? 'float1' : FLOAT_ANIMS[animIdx - 1];
-            const zIdx      = isHero ? 50 : (10 + depth * 5);
+            const floatDur    = isHero ? 9 : FLOAT_DUR[animIdx - 1];
+            const floatAnim   = isHero ? 'float1' : FLOAT_ANIMS[animIdx - 1];
+            const zIdx        = isHero ? 50 : (10 + depth * 5);
+            const blur        = isHero ? 0 : DEPTH_BLUR[depth];
+            const brite       = isHero ? 1.1  : DEPTH_BRITE[depth];
+            const sat         = isHero ? 1.08 : DEPTH_SAT[depth];
+            const tzPx        = isHero ? 220  : DEPTH_Z[depth];
+            const scale       = isHero ? 1.06 : DEPTH_SCALE[depth];
+            const frameShadow = isHero ? DEPTH_SHADOW[3] : DEPTH_SHADOW[depth];
+            // Vary entrance per column zone
+            const entranceIdx = isHero ? 3 : (left < 30 ? 1 : left > 65 ? 2 : i % 2 === 0 ? 0 : 3);
+            const entranceAnim = ENTRANCE_ANIMS[entranceIdx];
+            const entranceDur  = 0.75 + delay * 0.15;
+
+            const filterStr = blur > 0
+                ? `blur(${blur}px) brightness(${brite}) saturate(${sat})`
+                : `brightness(${brite}) saturate(${sat})`;
 
             el.style.cssText = `
                 left: ${left}%;
@@ -1230,11 +1207,13 @@
                 width: ${w}px;
                 height: ${h}px;
                 --r: ${rot}deg;
+                --tz: ${tzPx}px;
+                --frame-shadow: ${frameShadow};
                 animation:
-                    photoEntrance 0.9s cubic-bezier(0.22,1,0.36,1) ${delay}s both,
-                    ${floatAnim} ${floatDur}s ease-in-out ${delay}s infinite;
-                filter: brightness(${isHero ? 1.08 : DEPTH_DIM[depth]}) saturate(${isHero ? 1.05 : 0.88});
-                transform: translateZ(${DEPTH_Z[depth]}px) scale(${DEPTH_SCALE[depth]}) rotate(${rot}deg);
+                    ${entranceAnim} ${entranceDur}s cubic-bezier(0.22,1,0.36,1) ${delay}s both,
+                    ${floatAnim} ${floatDur}s ease-in-out ${delay + entranceDur}s infinite;
+                filter: ${filterStr};
+                transform: translateZ(${tzPx}px) scale(${scale}) rotate(${rot}deg);
                 z-index: ${zIdx};
             `;
 
@@ -1248,6 +1227,13 @@
             `;
 
             el.addEventListener('click', () => openLightbox(i));
+            // Reset blur on hover via JS for smooth DoF transition
+            el.addEventListener('mouseenter', () => {
+                el.style.filter = `brightness(1.05) saturate(1.1)`;
+            });
+            el.addEventListener('mouseleave', () => {
+                el.style.filter = filterStr;
+            });
             world.appendChild(el);
         });
 
@@ -1257,40 +1243,82 @@
             if (sub) sub.innerHTML = 'DRAG<br>TO EXPLORE';
         }
 
-        /* ─── Parallax on mouse move ─── */
+        /* ─── Parallax on mouse move (smooth inertia) ─── */
         const canvas = document.getElementById('galleryCanvas');
+        const slideshowBtn = document.getElementById('slideshowBtn');
         let targetRX = 0, targetRY = 0;
         let currentRX = 0, currentRY = 0;
+        let lastMouse = { x: 0, y: 0 };
+        let autoPlay = false;
+        let autoTime = 0;
+
+        slideshowBtn.addEventListener('click', () => {
+            autoPlay = !autoPlay;
+            slideshowBtn.classList.toggle('active', autoPlay);
+            slideshowBtn.querySelector('span').textContent = autoPlay ? 'Stop Play' : 'Auto Play';
+            slideshowBtn.querySelector('svg').innerHTML = autoPlay 
+                ? '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>'
+                : '<polygon points="5 3 19 12 5 21 5 3"/>';
+        });
 
         canvas.addEventListener('mousemove', (e) => {
+            if (autoPlay) return; // disable during autoplay
             const cx = canvas.clientWidth  / 2;
             const cy = canvas.clientHeight / 2;
-            targetRY =  ((e.clientX - cx) / cx) * 8;
-            targetRX = -((e.clientY - cy) / cy) * 5;
+            const dx = e.clientX - lastMouse.x;
+            const dy = e.clientY - lastMouse.y;
+            lastMouse = { x: e.clientX, y: e.clientY };
+            // Clamp targets with slight velocity from movement speed
+            targetRY = Math.max(-10, Math.min(10, ((e.clientX - cx) / cx) * 9 + dx * 0.04));
+            targetRX = Math.max(-6,  Math.min(6,  -((e.clientY - cy) / cy) * 6 + dy * -0.03));
         });
-        canvas.addEventListener('mouseleave', () => { targetRX = 0; targetRY = 0; });
+        canvas.addEventListener('mouseleave', () => { if(!autoPlay) { targetRX = 0; targetRY = 0; } });
 
         function lerp(a, b, t) { return a + (b - a) * t; }
         function tick() {
-            currentRX = lerp(currentRX, targetRX, 0.06);
-            currentRY = lerp(currentRY, targetRY, 0.06);
-            world.style.transform = `rotateX(${currentRX}deg) rotateY(${currentRY}deg)`;
+            if (autoPlay) {
+                autoTime += 0.005;
+                targetRY = Math.sin(autoTime) * 8;
+                targetRX = Math.cos(autoTime * 0.7) * 4;
+            }
+            // Inertia: lerp toward target — feels heavy/weighted
+            currentRX = lerp(currentRX, targetRX, 0.055);
+            currentRY = lerp(currentRY, targetRY, 0.055);
+            world.style.transform = `rotateX(${currentRX.toFixed(3)}deg) rotateY(${currentRY.toFixed(3)}deg)`;
             requestAnimationFrame(tick);
         }
         tick();
 
-        /* ─── Touch drag pan ─── */
+        /* ─── Touch drag pan with inertia ─── */
         let isDragging = false, dragStart = { x: 0, y: 0 };
+        let velX = 0, velY = 0, lastTouch = { x: 0, y: 0 };
         canvas.addEventListener('touchstart', (e) => {
             isDragging = true;
-            dragStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            dragStart = lastTouch = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            velX = velY = 0;
         }, { passive: true });
         canvas.addEventListener('touchmove', (e) => {
             if (!isDragging) return;
-            targetRY =  ((e.touches[0].clientX - dragStart.x) / canvas.clientWidth)  * 20;
-            targetRX = -((e.touches[0].clientY - dragStart.y) / canvas.clientHeight) * 12;
+            const tx = e.touches[0].clientX, ty = e.touches[0].clientY;
+            velX = tx - lastTouch.x;
+            velY = ty - lastTouch.y;
+            lastTouch = { x: tx, y: ty };
+            targetRY = Math.max(-14, Math.min(14, ((tx - dragStart.x) / canvas.clientWidth)  * 22));
+            targetRX = Math.max(-9,  Math.min(9,  -((ty - dragStart.y) / canvas.clientHeight) * 14));
         }, { passive: true });
-        canvas.addEventListener('touchend', () => { isDragging = false; targetRX = 0; targetRY = 0; });
+        canvas.addEventListener('touchend', () => {
+            isDragging = false;
+            // Apply momentum decay
+            const decay = () => {
+                velX *= 0.88; velY *= 0.88;
+                targetRY += velX * 0.04;
+                targetRX -= velY * 0.03;
+                targetRY *= 0.94; targetRX *= 0.94;
+                if (Math.abs(velX) > 0.2 || Math.abs(velY) > 0.2) requestAnimationFrame(decay);
+                else { targetRX = 0; targetRY = 0; }
+            };
+            requestAnimationFrame(decay);
+        });
 
         /* ─── Lightbox ─── */
         const lightbox  = document.getElementById('lightbox');
@@ -1358,11 +1386,11 @@
 
         /* ── Photo data ── */
         const PHOTOS = [
-            { src:'image/1.jpeg',  cap:'26.09.24' },
-            { src:'image/2.jpeg',  cap:'26.09.24' },
-            { src:'image/3.jpeg',  cap:'26.09.24' },
-            { src:'image/4.jpeg',  cap:'26.09.24' },
-            { src:'image/5.jpeg',  cap:'26.09.24' },
+            { src:'image/32.png',  cap:'26.09.24' },
+            { src:'image/33.png',  cap:'26.09.24' },
+            { src:'image/34.png',  cap:'26.09.24' },
+            { src:'image/35.png',  cap:'26.09.24' },
+            { src:'image/36.png',  cap:'26.09.24' },
             { src:'image/6.jpeg',  cap:'26.09.24' },
             { src:'image/7.jpeg',  cap:'26.09.24' },
             { src:'image/8.jpeg',  cap:'26.09.24' },
@@ -1372,7 +1400,15 @@
             { src:'image/12.jpeg', cap:'26.09.24' },
             { src:'image/13.jpeg', cap:'26.09.24' },
             { src:'image/14.jpeg', cap:'26.09.24' },
+            { src:'image/2.jpeg',  cap:'26.09.24' },
             { src:'image/15.png',  cap:'26.09.24' },
+            { src:'image/16.png',  cap:'26.09.24' },
+            { src:'image/17.png',  cap:'26.09.24' },
+            { src:'image/18.png',  cap:'26.09.24' },
+            { src:'image/19.png',  cap:'26.09.24' },
+            { src:'image/20.png',  cap:'26.09.24' },
+            { src:'image/21.png',  cap:'26.09.24' },
+            { src:'image/22.png',  cap:'26.09.24' },
         ];
 
         /* ── Layout: [centerVW, topVH, sizeIdx, rot, z]
@@ -1396,6 +1432,15 @@
             [  83,  90,   1,   10,  11 ],  // 12 right, medium
             [  32, 104,   1,   -5,  13 ],  // 13 center-left, medium
             [  68, 108,   2,    8,  18 ],  // 14 right, large
+            // Extra memories mobile (spacing vh ≥ 28)
+            [ 15, 130,   1,   -9,  12 ],
+            [ 80, 132,   0,    7,   8 ],
+            [ 45, 155,   2,   -3,  16 ],
+            [ 10, 178,   1,    6,  11 ],
+            [ 85, 180,   0,   -8,   7 ],
+            [ 40, 205,   2,    4,  19 ],
+            [ 75, 230,   1,   -5,  14 ],
+            [ 12, 235,   0,    9,   6 ],
         ];
 
         const SIZES = [

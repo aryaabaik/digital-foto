@@ -8,7 +8,7 @@
     // ── Playlist ──────────────────────────────────────────────────────
     const PLAYLIST = [
         {
-            src:   "sound/I%27d%20like%20to%20watch%20you%20sleeping%20_%20lirik%20dan%20musik%20oleh%20Sal%20Priadi.mp3",
+            src:   "sound/I'd%20like%20to%20watch%20you%20sleeping%20-%20Sal%20Priadi%20_%20Lirik%20Lagu.mp3",
             title: "Sal Priadi — I'd like to watch you sleeping",
             lyrics: `I'd like to watch you sleeping
 Lebih sering menganga
