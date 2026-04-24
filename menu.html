@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pilih Mode - Digital Foto Arcika</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <style>
+        /* ── Floating Gallery preview card ── */
+        .fg-preview {
+            position: absolute; inset: 0;
+            overflow: hidden;
+        }
+        .fg-pol {
+            position: absolute;
+            background: #ede4d2;
+            padding: 4px 4px 16px 4px;
+            border-radius: 2px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.7);
+            overflow: hidden;
+        }
+        .fg-pol img {
+            width: 100%; height: calc(100% - 12px);
+            object-fit: cover; display: block;
+            border-radius: 1px;
+        }
+        @keyframes fgFloat1 {
+            0%,100% { translate: 0 0; }
+            50%      { translate: 0 -9px; }
+        }
+        @keyframes fgFloat2 {
+            0%,100% { translate: 0 0; }
+            50%      { translate: 0 -6px; }
+        }
+
+        /* ── Slideshow preview filmstrip ── */
+        .ss-preview {
+            position: absolute; inset: 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #050403;
+        }
+        .ss-strip {
+            display: flex;
+            gap: 0;
+            will-change: transform;
+            animation: ssSlide 7s ease-in-out infinite;
+        }
+        @keyframes ssSlide {
+            0%        { transform: translateX(0); }
+            30%       { transform: translateX(0); }
+            40%       { transform: translateX(-33.33%); }
+            65%       { transform: translateX(-33.33%); }
+            75%       { transform: translateX(-66.66%); }
+            95%       { transform: translateX(-66.66%); }
+            100%      { transform: translateX(0); }
+        }
+        .ss-frame {
+            flex: 0 0 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        .ss-frame img {
+            width: 100%; height: 100%;
+            object-fit: cover; display: block;
+        }
+        .ss-frame::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(to bottom, transparent 60%, rgba(5,4,3,0.55));
+        }
+        /* Film strip hole decoration */
+        .ss-holes {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 0 6px;
+            z-index: 2;
+            pointer-events: none;
+        }
+        .ss-holes-b { top: auto; bottom: 0; }
+        .ss-hole {
+            width: 7px; height: 5px;
+            background: #050403;
+            border-radius: 1px;
+            opacity: 0.8;
+        }
+        /* Dot indicator */
+        .ss-dots {
+            position: absolute;
+            bottom: 16px; left: 50%;
+            transform: translateX(-50%);
+            display: flex; gap: 5px;
+            z-index: 3;
+        }
+        .ss-dot {
+            width: 5px; height: 5px;
+            border-radius: 50%;
+            background: rgba(220,208,186,0.3);
+        }
+        .ss-dot.a1 { animation: ssDotActive 7s ease-in-out infinite 0s; }
+        .ss-dot.a2 { animation: ssDotActive 7s ease-in-out infinite -4.67s; }
+        .ss-dot.a3 { animation: ssDotActive 7s ease-in-out infinite -2.33s; }
+        @keyframes ssDotActive {
+            0%,28%  { background: rgba(220,190,90,0.9); transform: scale(1.3); }
+            34%,100%{ background: rgba(220,208,186,0.3); transform: scale(1); }
+        }
+
+        /* ── Rotate-Foto preview polaroid ── */
+        .rot-preview {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            background: #050403;
+            overflow: hidden;
+        }
+        .rot-stack {
+            position: relative;
+            width: 110px; height: 130px;
+        }
+        .rot-pol {
+            position: absolute;
+            background: #f0e8d8;
+            border-radius: 3px;
+            box-shadow: 0 8px 28px rgba(0,0,0,0.75);
+            overflow: hidden;
+        }
+        .rot-pol img {
+            width: 100%; height: 100%;
+            object-fit: cover; display: block;
+            border-radius: 2px 2px 0 0;
+        }
+        /* back card */
+        .rot-pol.back {
+            width: 90px; height: 112px;
+            padding: 5px 5px 22px;
+            top: 10px; left: 8px;
+            transform: rotate(-9deg);
+            opacity: 0.5;
+            filter: brightness(0.6);
+        }
+        /* front card */
+        .rot-pol.front {
+            width: 96px; height: 118px;
+            padding: 6px 6px 26px;
+            top: 6px; left: 5px;
+            animation: rotTilt 5s ease-in-out infinite;
+        }
+        @keyframes rotTilt {
+            0%,100% { transform: rotate(-3deg) translateY(0); }
+            50%      { transform: rotate(3deg) translateY(-7px); }
+        }
+        .rot-pol-label {
+            position: absolute;
+            bottom: 5px; left: 0; right: 0;
+            text-align: center;
+            font-family: 'Courier Prime', monospace;
+            font-size: 8px;
+            letter-spacing: 1.5px;
+            color: rgba(80,55,30,0.7);
+        }
+        /* Knob icon below stack */
+        .rot-knob-icon {
+            position: absolute;
+            bottom: 12px; left: 50%;
+            transform: translateX(-50%);
+            display: flex; align-items: center; gap: 6px;
+            font-family: 'Courier Prime', monospace;
+            font-size: 8px; letter-spacing: 2px;
+            color: rgba(190,150,70,0.5);
+            text-transform: uppercase;
+        }
+        .rot-knob-circle {
+            width: 16px; height: 16px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(190,150,70,0.5);
+            display: flex; align-items: center; justify-content: center;
+            animation: rotKnob 3s linear infinite;
+        }
+        @keyframes rotKnob {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
+        .rot-knob-dot {
+            width: 3px; height: 3px;
+            border-radius: 50%;
+            background: rgba(190,150,70,0.7);
+            margin-top: -5px;
+        }
+
+        /* ── 8. Film grain (konsistensi tema) ── */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 9990;
+            pointer-events: none;
+            opacity: 0.04;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-size: 200px 200px;
+        }
+
+        /* ── 5. Background radial gradient + vignette ── */
+        body {
+            gap: 16px;
+            background: radial-gradient(ellipse at 50% 38%, #3d3432 0%, #2b2524 50%, #181413 100%);
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background: radial-gradient(circle at 50% 42%, transparent 35%, rgba(8,6,5,0.72) 100%);
+        }
+
+        /* ── Floating Ambient Lights ── */
+        .ambient-light {
+            position: fixed;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(220, 160, 80, 0.12), transparent 70%);
+            filter: blur(35px);
+            pointer-events: none;
+            z-index: 0;
+            animation: floatLight 14s ease-in-out infinite alternate;
+        }
+        .light-1 { width: 40vw; height: 40vw; top: -10%; left: -10%; }
+        .light-2 { width: 35vw; height: 35vw; bottom: -5%; right: -5%; animation-delay: -5s; background: radial-gradient(circle, rgba(190, 120, 60, 0.1), transparent 70%); }
+        .light-3 { width: 25vw; height: 25vw; top: 40%; left: 40%; animation-delay: -9s; background: radial-gradient(circle, rgba(255, 200, 120, 0.08), transparent 70%); }
+        @keyframes floatLight {
+            0% { transform: translate(0, 0) scale(1); opacity: 0.6; }
+            100% { transform: translate(60px, -40px) scale(1.15); opacity: 1; }
+        }
+
+        /* ── Floating Background Photos ── */
+        .bg-float-container {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+            opacity: 0.18; /* Subtle blending */
+            mix-blend-mode: luminosity;
+        }
+        .bg-float {
+            position: absolute;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            filter: grayscale(40%) sepia(30%) brightness(0.6);
+            opacity: 0;
+            animation: bgFloatFadeIn 2s ease forwards, bgFloatAnim 25s ease-in-out infinite alternate;
+        }
+        .bg-float img {
+            width: 100%; height: 100%; object-fit: cover; display: block;
+        }
+        
+        .bf-1 { width: 180px; height: 240px; top: 10%; left: 8%; animation-delay: 0s, 0s; }
+        .bf-2 { width: 150px; height: 200px; bottom: 15%; right: 12%; animation-delay: 0.3s, -5s; animation-direction: normal, alternate-reverse; }
+        .bf-3 { width: 200px; height: 260px; top: 30%; right: 28%; animation-delay: 0.6s, -12s; opacity: 0.5; filter: grayscale(50%) blur(4px) brightness(0.4); }
+        .bf-4 { width: 140px; height: 190px; bottom: 8%; left: 25%; animation-delay: 0.9s, -8s; }
+        .bf-5 { width: 220px; height: 280px; top: -5%; left: 40%; animation-delay: 1.2s, -15s; filter: blur(6px) brightness(0.3); }
+
+        @keyframes bgFloatFadeIn {
+            to { opacity: 0.6; }
+        }
+        @keyframes bgFloatAnim {
+            0%   { transform: translateY(0) rotate(-4deg); }
+            50%  { transform: translateY(-40px) rotate(4deg); }
+            100% { transform: translateY(20px) rotate(-2deg); }
+        }
+
+        /* ── Card Image Breathing (Zoom) ── */
+        @keyframes breatheZoom {
+            0% { transform: scale(1.0); }
+            100% { transform: scale(1.07); }
+        }
+        .ss-frame img, .rot-pol img, .fg-pol img {
+            animation: breatheZoom 8s ease-in-out infinite alternate;
+        }
+
+        /* ── 7. Bottom fade ── */
+        body > *   { position: relative; z-index: 1; }
+
+        /* ── 1. Opening animation ── */
+        @keyframes riseIn {
+            from { opacity: 0; transform: translateY(22px); }
+            to   { opacity: 1; transform: translateY(0);    }
+        }
+        @keyframes cardReveal {
+            from { opacity: 0; transform: translateY(40px) scale(0.92); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .main-header {
+            animation: riseIn 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            margin-bottom: 40px; /* Increased from 4px */
+        }
+
+        .choices-wrapper {
+            display: flex;
+            gap: 75px; /* Increased from 50px */
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            /* Animation handled by individual cards now */
+        }
+
+        /* ── 2. Subtitle ── */
+        .index-subtitle {
+            font-family: 'Courier Prime', monospace;
+            font-size: 13px; /* Slightly larger */
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            color: rgba(220, 208, 186, 0.7); /* Better contrast */
+            text-align: center;
+            margin-top: -2px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.6); /* Added shadow for readability */
+        }
+
+        /* ── 3 & 4. Card hover + clickable feel ── */
+        .choice-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            opacity: 0;
+            animation: cardReveal 0.8s cubic-bezier(0.175, 0.885, 0.32, 1) forwards;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            /* Add some 3D perspective context */
+            perspective: 1000px;
+        }
+        .choice-link:nth-child(1) { animation-delay: 0.3s; }
+        .choice-link:nth-child(2) { animation-delay: 0.45s; }
+        .choice-link:nth-child(3) { animation-delay: 0.6s; }
+        .choice-link:nth-child(4) { animation-delay: 0.75s; }
+
+        .choice-link:hover {
+            transform: translateY(-14px) scale(1.03);
+            z-index: 10;
+        }
+
+        .choice-link .device {
+            height: 460px;
+            width: 320px;
+            padding: 30px 20px;
+            pointer-events: none;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-style: preserve-3d;
+        }
+
+        /* 4. Featured card — glow ambient always-on (first card) */
+        .choice-link:first-child .device {
+            box-shadow:
+                15px 20px 40px rgba(0,0,0,0.6),
+                inset 2px 2px 5px rgba(255,255,255,0.1),
+                inset -2px -2px 5px rgba(0,0,0,0.3),
+                0 0 30px rgba(190, 150, 70, 0.09);
+            border: 1px solid rgba(190, 150, 70, 0.15);
+        }
+
+        /* 3. Hover: deep shadow + amber glow */
+        .choice-link:hover .device {
+            box-shadow:
+                0 40px 70px rgba(0,0,0,0.9),
+                inset 3px 3px 8px rgba(255,255,255,0.18),
+                inset -3px -3px 8px rgba(0,0,0,0.4),
+                0 0 45px rgba(220, 160, 80, 0.25);
+            border: 1px solid rgba(220, 160, 80, 0.4);
+            background: linear-gradient(145deg, #4c433e, #3a322d); /* Slightly lighter on hover */
+        }
+
+        /* Hover hint text */
+        .click-hint {
+            position: absolute;
+            bottom: -15px; /* Starts slightly below */
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Courier Prime', monospace;
+            font-size: 10px;
+            letter-spacing: 3px;
+            color: rgba(220, 190, 120, 0);
+            text-transform: uppercase;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            white-space: nowrap;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            pointer-events: none;
+        }
+        .choice-link:hover .click-hint {
+            bottom: -35px; /* Drops down smoothly */
+            color: rgba(220, 190, 120, 0.95);
+        }
+
+        /* Shimmer overlay on hover */
+        .choice-link .device::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(rgba(255,255,255,0.055), transparent);
+            border-radius: 35px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .choice-link:hover .device::after { opacity: 1; }
+
+        .choice-link .screen-bezel {
+            height: 160px;
+            margin-bottom: 25px;
+        }
+
+        .choice-link .photo-track { padding: 0 45px; }
+
+        .choice-link .photo {
+            width: 170px;
+            height: 140px;
+        }
+
+        /* 3. Inner photo zoom on hover */
+        .choice-link .photo img {
+            transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .choice-link:hover .photo img {
+            transform: scale(1.1);
+        }
+
+        /* ── Menu labels ── */
+        .menu-title {
+            text-align: center;
+            color: #dcd0ba;
+            font-size: 20px;
+            margin-top: 15px;
+            letter-spacing: 2px;
+            font-weight: bold;
+            font-family: 'Courier Prime', monospace;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        .menu-desc {
+            text-align: center;
+            color: #928373;
+            font-size: 13px;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        /* Preview knob */
+        .preview-knob-container {
+            position: relative;
+            width: 40px;
+            height: 40px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* ── Gallery grid preview ── */
+        .gal-preview {
+            position: absolute; inset: 0;
+            background: #050403;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 3px;
+            padding: 10px;
+            overflow: hidden;
+        }
+        .gal-cell {
+            overflow: hidden;
+            border-radius: 2px;
+            position: relative;
+        }
+        .gal-cell img {
+            width: 100%; height: 100%;
+            object-fit: cover; display: block;
+            transition: transform 0.6s ease;
+            animation: galZoom 8s ease-in-out infinite;
+        }
+        .gal-cell:nth-child(1) img { animation-delay: 0s; }
+        .gal-cell:nth-child(2) img { animation-delay: 1.2s; }
+        .gal-cell:nth-child(3) img { animation-delay: 2.4s; }
+        .gal-cell:nth-child(4) img { animation-delay: 3.6s; }
+        .gal-cell:nth-child(5) img { animation-delay: 4.8s; }
+        .gal-cell:nth-child(6) img { animation-delay: 6.0s; }
+        @keyframes galZoom {
+            0%,80%,100% { transform: scale(1); }
+            40%          { transform: scale(1.12); }
+        }
+        /* Heart badge overlay */
+        .gal-badge {
+            position: absolute;
+            bottom: 6px; right: 6px;
+            font-size: 9px;
+            letter-spacing: 2px;
+            color: rgba(220,190,90,0.8);
+            font-family: 'Courier Prime', monospace;
+            background: rgba(5,4,3,0.65);
+            padding: 2px 5px;
+            border-radius: 2px;
+            text-transform: uppercase;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* ── Mobile: horizontal scroll ── */
+        @media (max-width: 768px) {
+            body { 
+                overflow: hidden; 
+                justify-content: flex-start; 
+                padding-top: 85px; 
+                gap: 20px;
+            }
+
+            .main-header {
+                margin-bottom: 25px;
+            }
+
+            .choices-wrapper {
+                flex-wrap: nowrap;
+                flex-direction: row;
+                gap: 28px; /* Increased from 20px */
+                overflow-x: auto;
+                overflow-y: hidden;
+                width: 100vw;
+                padding: 10px 32px 30px; /* Add bottom padding for shadow */
+                justify-content: flex-start;
+                -webkit-overflow-scrolling: touch;
+                scroll-snap-type: x mandatory;
+                scrollbar-width: none;
+            }
+            .choices-wrapper::-webkit-scrollbar { display: none; }
+
+            .choice-link {
+                scroll-snap-align: center;
+                flex-shrink: 0;
+            }
+            .choice-link .device {
+                width: 250px;
+                height: 380px;
+                padding: 22px 14px;
+            }
+            .choice-link .screen-bezel { height: 125px; margin-bottom: 20px; }
+            .choice-link .photo { width: 135px; height: 105px; }
+            
+            /* Adjust preview inside screen */
+            .ss-strip { transform: scale(0.9); }
+            .rot-stack { transform: scale(0.85); }
+            .fg-preview { transform: scale(0.9); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Floating Photos -->
+    <div class="bg-float-container">
+        <div class="bg-float bf-1"><img src="image/2.jpeg" alt=""></div>
+        <div class="bg-float bf-2"><img src="image/5.jpeg" alt=""></div>
+        <div class="bg-float bf-3"><img src="image/9.jpeg" alt=""></div>
+        <div class="bg-float bf-4"><img src="image/12.jpeg" alt=""></div>
+        <div class="bg-float bf-5"><img src="image/1.jpeg" alt=""></div>
+    </div>
+
+    <!-- Ambient Lights -->
+    <div class="ambient-light light-1"></div>
+    <div class="ambient-light light-2"></div>
+    <div class="ambient-light light-3"></div>
+
+    <a href="index.html" class="back-btn" aria-label="Kembali ke Beranda" style="z-index:9999;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+    </a>
+    <div class="main-header">
+        <h1 class="page-title">Digital Foto Arcika</h1>
+        <p class="index-subtitle">photo for you</p>
+    </div>
+
+    <div class="choices-wrapper">
+        <!-- Pilihan 1: Slideshow Otomatis -->
+        <a href="slideshow.html" class="choice-link">
+            <div class="device">
+                <div class="screw top-left"></div>
+                <div class="screw top-right"></div>
+                <div class="screw bottom-left"></div>
+                <div class="screw bottom-right"></div>
+                
+                <div class="device-title">For You</div>
+                
+                <div class="screen-bezel" style="position:relative; overflow:hidden;">
+                    <div class="screen-glass" style="background:#050403; padding:0; overflow:hidden;">
+                        <div class="ss-preview">
+                            <!-- Film holes top -->
+                            <div class="ss-holes">
+                                <div class="ss-hole"></div><div class="ss-hole"></div><div class="ss-hole"></div>
+                                <div class="ss-hole"></div><div class="ss-hole"></div><div class="ss-hole"></div>
+                                <div class="ss-hole"></div><div class="ss-hole"></div>
+                            </div>
+                            <!-- Film holes bottom -->
+                            <div class="ss-holes ss-holes-b">
+                                <div class="ss-hole"></div><div class="ss-hole"></div><div class="ss-hole"></div>
+                                <div class="ss-hole"></div><div class="ss-hole"></div><div class="ss-hole"></div>
+                                <div class="ss-hole"></div><div class="ss-hole"></div>
+                            </div>
+                            <!-- 3 foto strip -->
+                            <div class="ss-strip" style="width:300%; height:100%;">
+                                <div class="ss-frame"><img src="image/1.jpeg" alt="Slideshow 1"></div>
+                                <div class="ss-frame"><img src="image/6.jpeg" alt="Slideshow 2"></div>
+                                <div class="ss-frame"><img src="image/11.jpeg" alt="Slideshow 3"></div>
+                            </div>
+                            <!-- Dot indicators -->
+                            <div class="ss-dots">
+                                <div class="ss-dot a1"></div>
+                                <div class="ss-dot a2"></div>
+                                <div class="ss-dot a3"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="menu-title">SLIDESHOW</div>
+                <div class="menu-desc">Foto berjalan otomatis</div>
+                <div class="click-hint">Klik untuk masuk</div>
+            </div>
+        </a>
+
+        <!-- Pilihan 2: Digital Player -->
+        <a href="player.html" class="choice-link">
+            <div class="device">
+                <div class="screw top-left"></div>
+                <div class="screw top-right"></div>
+                <div class="screw bottom-left"></div>
+                <div class="screw bottom-right"></div>
+                
+                <div class="device-title">ROTATE-FOTO</div>
+                
+                <div class="screen-bezel" style="position:relative; overflow:hidden;">
+                    <div class="screen-glass" style="background:#050403; padding:0; overflow:hidden;">
+                        <div class="rot-preview">
+                            <!-- Stacked polaroids -->
+                            <div class="rot-stack">
+                                <!-- Back card -->
+                                <div class="rot-pol back">
+                                    <img src="image/4.jpeg" alt="Rotate back">
+                                </div>
+                                <!-- Front card -->
+                                <div class="rot-pol front">
+                                    <img src="image/10.jpeg" alt="Rotate front">
+                                    <div class="rot-pol-label">26.09.24</div>
+                                </div>
+                            </div>
+                            <!-- Spinning knob icon -->
+                            <div class="rot-knob-icon">
+                                <div class="rot-knob-circle">
+                                    <div class="rot-knob-dot"></div>
+                                </div>
+                                putar
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="menu-title">DIGITAL FOTO</div>
+                <div class="menu-desc">Putar foto manual</div>
+                <div class="click-hint">Klik untuk masuk</div>
+            </div>
+        </a>
+
+        <!-- Pilihan 3: Floating Gallery -->
+        <a href="floating-gallery.html" class="choice-link" id="floatingGalleryBtn">
+            <div class="device" style="border: 1px solid rgba(190,150,70,0.13);">
+                <div class="screw top-left"></div>
+                <div class="screw top-right"></div>
+                <div class="screw bottom-left"></div>
+                <div class="screw bottom-right"></div>
+
+                <div class="device-title">FLOATING</div>
+
+                <div class="screen-bezel" style="position:relative; overflow:hidden;">
+                    <div class="screen-glass" style="background: #050403;">
+                        <!-- Mini floating polaroids inside the screen -->
+                        <div class="fg-preview">
+                            <div class="fg-pol" style="left:8%;  top:10%; width:72px; height:90px; transform:rotate(-5deg); animation: fgFloat1 4.5s ease-in-out infinite;"><img src="image/3.jpeg" alt="p"></div>
+                            <div class="fg-pol" style="left:38%; top:22%; width:58px; height:74px; transform:rotate(3deg);  animation: fgFloat2 5.5s ease-in-out 0.4s infinite;"><img src="image/7.jpeg" alt="p"></div>
+                            <div class="fg-pol" style="left:66%; top:8%;  width:66px; height:84px; transform:rotate(-2deg); animation: fgFloat1 6s   ease-in-out 0.8s infinite;"><img src="image/11.jpeg" alt="p"></div>
+                            <div class="fg-pol" style="left:15%; top:50%; width:60px; height:76px; transform:rotate(6deg);  animation: fgFloat2 5s   ease-in-out 0.2s infinite;"><img src="image/5.jpeg" alt="p"></div>
+                            <div class="fg-pol" style="left:52%; top:48%; width:70px; height:88px; transform:rotate(-4deg); animation: fgFloat1 6.5s ease-in-out 1.0s infinite;"><img src="image/9.jpeg" alt="p"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="menu-title">GALLERY</div>
+                <div class="menu-desc">Foto melayang bebas<br>dengan efek depth</div>
+                <div class="click-hint">Klik untuk masuk</div>
+            </div>
+        </a>
+
+        <!-- Pilihan 4: Galeri Kenangan -->
+        <a href="gallery.html" class="choice-link">
+            <div class="device">
+                <div class="screw top-left"></div>
+                <div class="screw top-right"></div>
+                <div class="screw bottom-left"></div>
+                <div class="screw bottom-right"></div>
+
+                <div class="device-title">GALERI</div>
+
+                <div class="screen-bezel" style="position:relative; overflow:hidden;">
+                    <div class="screen-glass" style="background:#050403; padding:0; overflow:hidden; position:relative;">
+                        <div class="gal-preview">
+                            <div class="gal-cell"><img src="image/2.jpeg" alt="g1"></div>
+                            <div class="gal-cell"><img src="image/5.jpeg" alt="g2"></div>
+                            <div class="gal-cell"><img src="image/8.jpeg" alt="g3"></div>
+                            <div class="gal-cell"><img src="image/3.jpeg" alt="g4"></div>
+                            <div class="gal-cell"><img src="image/9.jpeg" alt="g5"></div>
+                            <div class="gal-cell"><img src="image/13.jpeg" alt="g6"></div>
+                        </div>
+                        <div class="gal-badge">14 foto</div>
+                    </div>
+                </div>
+
+                <div class="menu-title">GALERI</div>
+                <div class="menu-desc">Semua kenangan<br>dalam satu tempat</div>
+                <div class="click-hint">Klik untuk masuk</div>
+            </div>
+        </a>
+    </div>
+
+    <script src="transitions.js"></script>
+    <script src="music.js"></script>
+</body>
+</html>

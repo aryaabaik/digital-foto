@@ -8,8 +8,8 @@
     // ── Playlist ──────────────────────────────────────────────────────
     const PLAYLIST = [
         {
-            src:   "sound/I'd%20like%20to%20watch%20you%20sleeping%20-%20Sal%20Priadi%20_%20Lirik%20Lagu.mp3",
-            title: "Sal Priadi — I'd like to watch you sleeping",
+            src:   "sound/I%E2%80%99d%20like%20to%20watch%20you%20sleeping%20-%20Sal%20Priadi%20_%20Lirik%20Lagu.mp3",
+            title: "Sal Priadi — I’d like to watch you sleeping",
             lyrics: `I'd like to watch you sleeping
 Lebih sering menganga
 Aku lihat ada tempat longgar di sana
@@ -707,6 +707,19 @@ Nikmati sementara yang ada`
         #df-lyrics-body.fading {
             opacity: 0 !important;
             filter: blur(6px) !important;
+        }
+
+        /* ── Mobile Responsive Music Player ── */
+        @media (max-width: 768px) {
+            #df-music-wrap { top: 16px; right: 16px; gap: 4px; }
+            #df-lyrics-btn { width: 28px; height: 28px; margin-right: 2px; }
+            #df-lyrics-btn svg { width: 12px; height: 12px; }
+            #df-prev-btn, #df-skip-btn { width: 28px; height: 28px; }
+            #df-prev-btn svg, #df-skip-btn svg { width: 11px; height: 11px; }
+            #df-music-btn { width: 34px; height: 34px; }
+            #df-music-btn svg { width: 15px; height: 15px; }
+            #df-music-btn.playing::after { width: 34px; height: 34px; }
+            #df-lyrics-content { padding: 34px 24px 26px; width: 92%; }
         }
     `;
     document.head.appendChild(style);

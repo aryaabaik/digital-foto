@@ -21,25 +21,46 @@ body {
     color: #ffffff;
     font-family: 'Dancing Script', cursive;
     font-weight: 700;
-    font-size: 50px; 
-    letter-spacing: normal; 
-    text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    font-size: 58px; 
+    letter-spacing: 1px; 
+    text-shadow: 
+        0 4px 15px rgba(220,190,120,0.35), 
+        0 2px 5px rgba(0,0,0,0.8),
+        0 0 30px rgba(255,255,255,0.1);
     text-align: center;
 }
 
-.back-link {
+.back-btn {
     position: absolute;
     top: 20px;
     left: 20px;
-    color: #928373;
-    text-decoration: none;
-    font-size: 14px;
-    letter-spacing: 1px;
-    transition: color 0.3s;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(196,168,118,0.08);
+    border: 1px solid rgba(196,168,118,0.15);
+    color: rgba(196,180,158,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
 }
 
-.back-link:hover {
-    color: #ffffff;
+.back-btn svg {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.3s ease;
+}
+
+.back-btn:hover {
+    background: rgba(196,168,118,0.2);
+    color: #ffe8b0;
+    box-shadow: 0 0 14px rgba(196,168,118,0.3);
+    transform: scale(1.05);
+}
+
+.back-btn:hover svg {
+    transform: translateX(-3px);
 }
 
 

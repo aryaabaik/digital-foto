@@ -9,9 +9,10 @@
     // ── Inject global consistency styles ──────────────────────────────────
     const s = document.createElement('style');
     s.textContent = `
-        /* Smooth fade on the root element */
+        /* Smooth fade + blur on the root element */
         html {
-            transition: opacity 0.46s ease;
+            transition: opacity 0.5s ease, filter 0.5s ease;
+            filter: blur(0px);
         }
 
         /* Back button: always fixed, always on top, consistent across pages */
@@ -81,6 +82,7 @@
         // Double rAF ensures paint has happened before we fade in
         requestAnimationFrame(() => requestAnimationFrame(() => {
             document.documentElement.style.opacity = '1';
+            document.documentElement.style.filter = 'blur(0px)';
         }));
     });
 
@@ -104,7 +106,8 @@
 
         // music.js pagehide will fire when location changes → state preserved
         document.documentElement.style.opacity = '0';
-        setTimeout(() => { window.location.href = href; }, 460);
+        document.documentElement.style.filter = 'blur(12px)';
+        setTimeout(() => { window.location.href = href; }, 480);
     });
 
 })();
