@@ -194,42 +194,5 @@ document.addEventListener("DOMContentLoaded", () => {
     window.addEventListener("touchend", endDrag);
     window.addEventListener("touchcancel", endDrag);
 
-    // ============================================
-    // AUTO SLIDESHOW (pause on hover)
-    // ============================================
-    const screenGlass = document.querySelector('.screen-glass');
-    const AUTO_DELAY  = 4000; // ms between auto-advances
-    let   autoTimer   = null;
-
-    function advanceAuto() {
-        totalAngle += anglePerPhoto;
-        if (rafId) cancelAnimationFrame(rafId);
-        rafId = requestAnimationFrame(updateUI);
-    }
-
-    function startAuto() {
-        if (autoTimer) return;
-        autoTimer = setInterval(advanceAuto, AUTO_DELAY);
-    }
-
-    function stopAuto() {
-        clearInterval(autoTimer);
-        autoTimer = null;
-    }
-
-    // Pause auto when user hovers the screen
-    screenGlass.addEventListener('mouseenter', () => {
-        stopAuto();
-        screenGlass.classList.add('paused');
-    });
-    screenGlass.addEventListener('mouseleave', () => {
-        screenGlass.classList.remove('paused');
-        startAuto();
-    });
-    // Also pause while dragging knob
-    knob.addEventListener('mousedown',  stopAuto);
-    window.addEventListener('mouseup',  () => { if (!isDragging) startAuto(); });
-
-    // Kick off auto on load
-    startAuto();
+    // Foto hanya bisa digerakkan manual via knob — tidak ada auto-play.
 });

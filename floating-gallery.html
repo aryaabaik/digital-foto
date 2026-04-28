@@ -456,7 +456,7 @@
         .mob-world {
             position: relative;
             width: 100%;
-            height: 148vh;
+            height: 200vh;
             cursor: default;
         }
         /* Each polaroid */
@@ -470,27 +470,35 @@
             background: #f0e8d8;
             border-radius: 3px;
             position: relative;
-            overflow: hidden;
+            overflow: hidden; /* Clip image to frame */
         }
         .mob-pol .pf::after {
             content: '';
             position: absolute; inset: 0;
             background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 50%);
             pointer-events: none; border-radius: 2px;
+            z-index: 1;
         }
-        .mob-pol .pf img {
+        .mob-pol .pf .img-box {
+            width: 100%;
+            overflow: hidden;
+            border-radius: 2px;
+        }
+        .mob-pol .pf .img-box img {
             display: block;
-            width: 100%; height: 100%;
-            object-fit: cover; border-radius: 2px;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 2px;
         }
         .mob-pol .pc {
-            position: absolute;
-            bottom: 0; left: 0; right: 0;
+            display: block;
             text-align: center;
             font-family: 'Courier Prime', monospace;
             color: rgba(70,50,25,0.78);
             letter-spacing: 1px;
             pointer-events: none;
+            padding: 3px 0 2px;
         }
         .mob-pol.pressing {
             z-index: 999 !important;
@@ -1385,30 +1393,33 @@
         if (window.innerWidth > 600) return;
 
         /* ── Photo data ── */
+        /* PHOTOS harus IDENTIK urutan & isinya dengan desktop PHOTOS
+           supaya openLightbox(idx) membuka foto yang benar */
         const PHOTOS = [
-            { src:'image/32.png',  cap:'26.09.24' },
-            { src:'image/33.png',  cap:'26.09.24' },
-            { src:'image/34.png',  cap:'26.09.24' },
-            { src:'image/35.png',  cap:'26.09.24' },
-            { src:'image/36.png',  cap:'26.09.24' },
-            { src:'image/6.jpeg',  cap:'26.09.24' },
-            { src:'image/7.jpeg',  cap:'26.09.24' },
-            { src:'image/8.jpeg',  cap:'26.09.24' },
-            { src:'image/9.jpeg',  cap:'26.09.24' },
-            { src:'image/10.jpeg', cap:'26.09.24' },
-            { src:'image/11.jpeg', cap:'26.09.24' },
-            { src:'image/12.jpeg', cap:'26.09.24' },
-            { src:'image/13.jpeg', cap:'26.09.24' },
-            { src:'image/14.jpeg', cap:'26.09.24' },
-            { src:'image/2.jpeg',  cap:'26.09.24' },
-            { src:'image/15.png',  cap:'26.09.24' },
-            { src:'image/16.png',  cap:'26.09.24' },
-            { src:'image/17.png',  cap:'26.09.24' },
-            { src:'image/18.png',  cap:'26.09.24' },
-            { src:'image/19.png',  cap:'26.09.24' },
-            { src:'image/20.png',  cap:'26.09.24' },
-            { src:'image/21.png',  cap:'26.09.24' },
-            { src:'image/22.png',  cap:'26.09.24' },
+            { src:'image/32.png',  cap:'26.09.24' },  // 0
+            { src:'image/33.png',  cap:'26.09.24' },  // 1
+            { src:'image/34.png',  cap:'26.09.24' },  // 2
+            { src:'image/35.png',  cap:'26.09.24' },  // 3
+            { src:'image/36.png',  cap:'26.09.24' },  // 4
+            { src:'image/6.jpeg',  cap:'26.09.24' },  // 5
+            { src:'image/7.jpeg',  cap:'26.09.24' },  // 6
+            { src:'image/8.jpeg',  cap:'26.09.24' },  // 7
+            { src:'image/9.jpeg',  cap:'26.09.24' },  // 8
+            { src:'image/10.jpeg', cap:'26.09.24' },  // 9
+            { src:'image/11.jpeg', cap:'26.09.24' },  // 10
+            { src:'image/12.jpeg', cap:'26.09.24' },  // 11
+            { src:'image/13.jpeg', cap:'26.09.24' },  // 12
+            { src:'image/14.jpeg', cap:'26.09.24' },  // 13
+            { src:'image/2.jpeg',  cap:'26.09.24' },  // 14
+            { src:'image/3.jpeg',  cap:'26.09.24' },  // 15 ← sebelumnya hilang!
+            { src:'image/15.png',  cap:'26.09.24' },  // 16
+            { src:'image/16.png',  cap:'26.09.24' },  // 17
+            { src:'image/17.png',  cap:'26.09.24' },  // 18
+            { src:'image/18.png',  cap:'26.09.24' },  // 19
+            { src:'image/19.png',  cap:'26.09.24' },  // 20
+            { src:'image/20.png',  cap:'26.09.24' },  // 21
+            { src:'image/21.png',  cap:'26.09.24' },  // 22
+            { src:'image/22.png',  cap:'26.09.24' },  // 23
         ];
 
         /* ── Layout: [centerVW, topVH, sizeIdx, rot, z]
@@ -1417,37 +1428,36 @@
            Photos alternate left-center-right for visual rhythm */
         const LAYOUT = [
             // cVW  tVH  sz  rot    z
-            [  12,   3,   0,  -13,   6 ],  // 0 small, far left, tilted strong
-            [  83,   4,   0,    9,   5 ],  // 1 small, far right
-            [  14,  20,   1,  -10,  12 ],  // 2 medium, left side
-            [  82,  18,   0,   12,   7 ],  // 3 small, right edge
-            [  50,  35,   3,   -2,  50 ],  // 4 HERO — centered, xlarge
-            [   6,  48,   1,   -7,  11 ],  // 5 left peek, medium
-            [  86,  50,   1,    9,   9 ],  // 6 right peek, medium
-            [  32,  62,   2,   -4,  18 ],  // 7 center-left, large
-            [  78,  63,   0,   13,   6 ],  // 8 far right, small
-            [   9,  76,   0,  -14,   7 ],  // 9 far left, small
-            [  58,  74,   1,    6,  14 ],  // 10 center-right, medium
-            [  10,  90,   2,  -11,  16 ],  // 11 left, large
-            [  83,  90,   1,   10,  11 ],  // 12 right, medium
-            [  32, 104,   1,   -5,  13 ],  // 13 center-left, medium
-            [  68, 108,   2,    8,  18 ],  // 14 right, large
-            // Extra memories mobile (spacing vh ≥ 28)
-            [ 15, 130,   1,   -9,  12 ],
-            [ 80, 132,   0,    7,   8 ],
-            [ 45, 155,   2,   -3,  16 ],
-            [ 10, 178,   1,    6,  11 ],
-            [ 85, 180,   0,   -8,   7 ],
-            [ 40, 205,   2,    4,  19 ],
-            [ 75, 230,   1,   -5,  14 ],
-            [ 12, 235,   0,    9,   6 ],
+            [  12,   3,   0,  -13,   6 ],  // 0
+            [  83,   4,   0,    9,   5 ],  // 1
+            [  14,  20,   1,  -10,  12 ],  // 2
+            [  82,  18,   0,   12,   7 ],  // 3
+            [  50,  35,   3,   -2,  50 ],  // 4 HERO
+            [   6,  52,   1,   -7,  11 ],  // 5
+            [  86,  50,   1,    9,   9 ],  // 6
+            [  32,  64,   2,   -4,  18 ],  // 7
+            [  78,  66,   0,   13,   6 ],  // 8
+            [   9,  78,   0,  -14,   7 ],  // 9
+            [  58,  76,   1,    6,  14 ],  // 10
+            [  10,  90,   2,  -11,  16 ],  // 11
+            [  83,  92,   1,   10,  11 ],  // 12
+            [  32, 104,   1,   -5,  13 ],  // 13
+            [  68, 106,   2,    8,  18 ],  // 14
+            [  15, 118,   1,   -9,  12 ],  // 15
+            [  80, 120,   0,    7,   8 ],  // 16
+            [  45, 133,   2,   -3,  16 ],  // 17
+            [  10, 146,   1,    6,  11 ],  // 18
+            [  85, 148,   0,   -8,   7 ],  // 19
+            [  40, 161,   2,    4,  19 ],  // 20
+            [  75, 174,   1,   -5,  14 ],  // 21
+            [  12, 176,   0,    9,   6 ],  // 22
         ];
 
         const SIZES = [
-            { w: 95,  pad: '7px 7px 28px',  capFs: '9px'  },  // 0 small  (far)
-            { w: 145, pad: '8px 8px 36px',  capFs: '10px' },  // 1 medium
-            { w: 188, pad:'10px 10px 42px', capFs: '11px' },  // 2 large
-            { w: 245, pad:'12px 12px 54px', capFs: '12px' },  // 3 hero
+            { w: 95,  topPad: 6,  botPad: 26, capFs: '9px'  },  // 0 small  (far)
+            { w: 145, topPad: 7,  botPad: 34, capFs: '10px' },  // 1 medium
+            { w: 188, topPad: 9,  botPad: 40, capFs: '11px' },  // 2 large
+            { w: 245, topPad: 11, botPad: 50, capFs: '12px' },  // 3 hero
         ];
 
         function shadowForZ(z) {
@@ -1474,14 +1484,19 @@
         PHOTOS.forEach((ph, i) => {
             const [cVW, tVH, sIdx, rot, z] = LAYOUT[i] || LAYOUT[i % LAYOUT.length];
             const sz = SIZES[sIdx];
-            const h  = Math.round(sz.w * 0.74);
+
+            // Image area = frame width minus side padding
+            const imgW = sz.w - sz.topPad * 2;
+            // Use classic 3:4 portrait ratio for consistent Polaroid look
+            // object-fit:cover will crop/fill the actual photo nicely
+            const imgH = Math.round(imgW * 1.25); // 4:5 portrait
+
             const leftPx = Math.max(4, Math.min(
                 window.innerWidth - sz.w - 4,
                 cVW * vw - sz.w / 2
             ));
-            /* Vary float animation per photo */
             const animIdx  = (i % 8) + 1;
-            const floatDur = z >= 40 ? 8 : (5.2 + (i % 5) * 0.7);  // hero slower
+            const floatDur = z >= 40 ? 8 : (5.2 + (i % 5) * 0.7);
             const delay    = (i * 0.38) % 4;
 
             const el = document.createElement('div');
@@ -1496,14 +1511,16 @@
                 filter: ${filterForZ(z)};
                 animation: float${animIdx} ${floatDur}s ease-in-out ${delay}s infinite;
             `;
-            el.innerHTML = `
-                <div class="pf" style="padding:${sz.pad}; box-shadow:${shadowForZ(z)};">
-                    <img src="${ph.src}" alt="${ph.cap}" loading="lazy" draggable="false"
-                         style="height:${h}px;">
-                    <div class="pc" style="font-size:${sz.capFs};">${ph.cap}</div>
-                </div>`;
-            world.appendChild(el);
 
+            el.innerHTML = `
+                <div class="pf" style="padding:${sz.topPad}px ${sz.topPad}px 0; box-shadow:${shadowForZ(z)};">
+                    <div class="img-box" style="height:${imgH}px;">
+                        <img src="${ph.src}" alt="${ph.cap}" loading="lazy" draggable="false">
+                    </div>
+                    <div class="pc" style="font-size:${sz.capFs}; height:${sz.botPad}px; line-height:${sz.botPad}px;">${ph.cap}</div>
+                </div>`;
+
+            world.appendChild(el);
         });
 
         /* ── Touch press feedback ── */
