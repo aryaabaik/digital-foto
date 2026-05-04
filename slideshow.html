@@ -48,28 +48,19 @@
         .dots-container { display: none !important; }
         .timers        { display: none !important; }
 
-        /* ── Manual Slideshow ── */
+        /* ── Horizontal Film Strip Auto-Scroll ── */
         .screen-glass { overflow: hidden; position: relative; }
         .photo-track {
             display: flex;
-            width: 100%;
             height: 188px;
-            position: relative;
+            will-change: transform;
         }
         .photo {
-            position: absolute;
-            inset: 0;
-            opacity: 0;
-            transition: opacity 0.6s ease, transform 0.6s ease;
-            transform: scale(1.03);
-        }
-        .photo.active {
-            opacity: 1;
-            transform: scale(1);
-        }
-        .photo.prev-out {
-            opacity: 0;
-            transform: scale(0.97);
+            flex: 0 0 220px;
+            width: 220px;
+            height: 188px;
+            overflow: hidden;
+            position: relative;
         }
 
         /* ── Photo image fill ── */
@@ -80,33 +71,9 @@
             display: block;
         }
 
-        /* ── Slide counter ── */
-        .slide-counter {
-            position: absolute;
-            top: 8px;
-            right: 10px;
-            z-index: 10;
-            font-family: 'Courier Prime', monospace;
-            font-size: 11px;
-            color: rgba(220,208,186,0.7);
-            letter-spacing: 2px;
-            background: rgba(0,0,0,0.42);
-            padding: 2px 8px;
-            border-radius: 20px;
-            backdrop-filter: blur(4px);
-        }
-
-        /* ── Nav arrows ── */
-        .slide-nav {
-            position: absolute;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 10;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+        /* ── Hide all manual controls ── */
+        .slide-counter { display: none !important; }
+        .slide-nav     { display: none !important; }
         .slide-btn {
             width: 34px;
             height: 34px;
@@ -227,7 +194,51 @@
             mix-blend-mode: multiply;
         }
 
-        /* ── (pause hint removed, using manual nav now) ── */
+        /* ── Progress bar (auto-play timer) ── */
+        .slide-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            width: 0%;
+            background: linear-gradient(90deg, rgba(200,152,106,0.9), rgba(230,188,130,1));
+            z-index: 10;
+            transition: none;
+            border-radius: 0 2px 0 0;
+            box-shadow: 0 0 8px rgba(200,152,106,0.7);
+        }
+        .slide-progress.animating {
+            transition: width linear;
+        }
+
+        /* ── Pause indicator overlay ── */
+        .pause-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .pause-overlay.visible {
+            opacity: 1;
+        }
+        .pause-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.55);
+            backdrop-filter: blur(8px);
+            border: 1.5px solid rgba(200,152,106,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: rgba(220,208,186,0.9);
+        }
 
         /* ── 5. Caption ── */
         .caption-wrap {
@@ -357,22 +368,10 @@
                 <div class="screen-grain"></div>
                 <!-- Photos here -->
                 <div class="photo-track" id="flowTrack"></div>
-                <!-- Slide counter -->
-                <div class="slide-counter" id="slideCounter">1 / 14</div>
                 <!-- Film strip frame overlay -->
                 <div class="film-strip"></div>
-                <!-- Nav controls -->
-                <div class="slide-nav">
-                    <button class="slide-btn" id="btnPrev" aria-label="Foto sebelumnya">&#8592;</button>
-                    <div class="slide-dots" id="slideDots"></div>
-                    <button class="slide-btn" id="btnNext" aria-label="Foto berikutnya">&#8594;</button>
-                </div>
             </div>
         </div>
-
-        <!-- Hidden controls -->
-        <div class="dots-container" id="autoDotsContainer"></div>
-        <div class="timers"></div>
 
         <!-- 5. Caption with delayed rise -->
         <div class="caption-wrap">
@@ -399,67 +398,63 @@
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const photos = [
-                'image/18.png',  'image/19.png',  'image/20.png',
-                'image/21.png',  'image/22.png',  'image/23.png',
-                'image/24.png',  'image/25.png',  'image/26.png',
+                'image/18.png', 'image/19.png', 'image/20.png',
+                'image/21.png', 'image/22.png', 'image/23.png',
+                'image/24.png', 'image/25.png', 'image/26.png',
                 'image/27.png', 'image/28.png', 'image/29.png',
                 'image/30.png', 'image/31.png'
             ];
 
-            const track   = document.getElementById("flowTrack");
-            const counter = document.getElementById("slideCounter");
-            const dotsEl  = document.getElementById("slideDots");
-            const btnPrev = document.getElementById("btnPrev");
-            const btnNext = document.getElementById("btnNext");
+            const track   = document.getElementById('flowTrack');
+            const PHOTO_W = 220;  // lebar per foto (px) — harus sama dengan CSS flex basis
+            const SPEED   = 45;   // px per detik — kecepatan geser ke kiri
 
-            let current = 0;
-
-            // Build slides
-            photos.forEach((src, i) => {
+            // Duplikat foto 3x untuk infinite loop seamless
+            const allSrcs = [...photos, ...photos, ...photos];
+            allSrcs.forEach((src, i) => {
                 const div = document.createElement('div');
-                div.className = 'photo' + (i === 0 ? ' active' : '');
+                div.className = 'photo';
                 div.innerHTML = `<img src="${src}" alt="Foto ${i+1}" loading="lazy">`;
                 track.appendChild(div);
             });
 
-            // Build dots
-            photos.forEach((_, i) => {
-                const dot = document.createElement('div');
-                dot.className = 'slide-dot' + (i === 0 ? ' active' : '');
-                dot.addEventListener('click', () => goTo(i));
-                dotsEl.appendChild(dot);
-            });
+            // Set lebar track agar semua foto muat dalam satu baris
+            track.style.width = (allSrcs.length * PHOTO_W) + 'px';
 
-            function goTo(index) {
-                const slides = track.querySelectorAll('.photo');
-                const dots   = dotsEl.querySelectorAll('.slide-dot');
+            // Mulai dari set kedua (tengah) agar bisa loop ke dua arah
+            const loopPoint = photos.length * PHOTO_W;
+            let offsetX = loopPoint;
+            track.style.transform = `translateX(-${offsetX}px)`;
 
-                slides[current].classList.remove('active');
-                dots[current].classList.remove('active');
+            let paused  = false;
+            let lastTs  = null;
 
-                current = (index + photos.length) % photos.length;
+            function animate(ts) {
+                if (!lastTs) lastTs = ts;
+                const dt = (ts - lastTs) / 1000; // detik
+                lastTs = ts;
 
-                slides[current].classList.add('active');
-                dots[current].classList.add('active');
-                counter.textContent = `${current + 1} / ${photos.length}`;
+                if (!paused) {
+                    offsetX += SPEED * dt;
+
+                    // Ketika sudah melewati set ketiga, loncat balik seamless
+                    if (offsetX >= loopPoint * 2) {
+                        offsetX -= loopPoint;
+                    }
+
+                    track.style.transform = `translateX(-${offsetX}px)`;
+                }
+
+                requestAnimationFrame(animate);
             }
 
-            btnPrev.addEventListener('click', () => goTo(current - 1));
-            btnNext.addEventListener('click', () => goTo(current + 1));
+            requestAnimationFrame(animate);
 
-            // Keyboard navigation
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'ArrowRight' || e.key === 'ArrowDown') goTo(current + 1);
-                if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   goTo(current - 1);
+            // Klik layar untuk pause / resume
+            track.addEventListener('click', () => {
+                paused = !paused;
+                if (!paused) lastTs = null; // reset delta agar tidak lompat
             });
-
-            // Touch/swipe support
-            let touchStartX = 0;
-            track.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].clientX; }, { passive: true });
-            track.addEventListener('touchend',   e => {
-                const dx = e.changedTouches[0].clientX - touchStartX;
-                if (Math.abs(dx) > 40) dx < 0 ? goTo(current + 1) : goTo(current - 1);
-            }, { passive: true });
         });
     </script>
 
